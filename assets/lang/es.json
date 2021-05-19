@@ -1,0 +1,23 @@
+{
+	"Starting [{{name}}] microservice": "Iniciciando el microservicio [{{name}}]",
+	"Http server is running at [{{scheme}}://{{host}}:{{port}}]": "El servidor Http ha sido iniciado en [{{scheme}}://{{host}}:{{port}}]",
+	"Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.": "Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.",
+	"active": "activo",
+	"The {{name}} microservice is running.": "The {{name}} microservice is running.",
+	"ok": "ok",
+	"Job [{{name}}] scheduled.": "Job [{{name}}] scheduled.",
+	"Job [{{name}}:#{{id}} failed. {{reason}}]": "Job [{{name}}:#{{id}} failed. {{reason}}]",
+	"Job [{{name}}#{{id}}] failed. {{reason}}": "Job [{{name}}#{{id}}] failed. {{reason}}",
+	"Job [{{name}}#{{id}}] successfully completed.": "Job [{{name}}#{{id}}] successfully completed.",
+	"Job [{{name}}#{{id}}] successfully completed. Returning {{return}}": "Job [{{name}}#{{id}}] successfully completed. Returning {{return}}",
+	"Job [[name#id]] completed": "Job [[name#id]] completed",
+	"Job [{{name}}#{{id}}] successfully completed. Returning: {{return}}": "Job [{{name}}#{{id}}] successfully completed. Returning: {{return}}",
+	"Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}": "Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}",
+	"Job [[{{name}}#{{id}}]] completed": "Job [[{{name}}#{{id}}]] completed",
+	"Job [ {{name}}#{{id}} ] completed": "Job [ {{name}}#{{id}} ] completed",
+	"Job [ {{name}} #{{id}} ] completed": "Job [ {{name}} #{{id}} ] completed",
+	"Job [{{name}} #{{id}}] completed": "Job [{{name}} #{{id}}] completed",
+	"Job [{{name}}#{{id}}] completed": "Job [{{name}}#{{id}}] completed",
+	"Identifier of [{{type}}] must be a valid class.": "Identifier of [{{type}}] must be a valid class.",
+	"Identifier of type [{{type}}] must be a valid class.": "Identifier of type [{{type}}] must be a valid class."
+}
