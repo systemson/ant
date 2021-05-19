@@ -17,6 +17,6 @@ export class TestWorker extends BaseWorker {
             };
         }
 
-        throw new Error("Ha ocurrido un error controlado.");
+        throw new Error(Lang.__("Job have failed."));
     }
 }

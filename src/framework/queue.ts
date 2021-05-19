@@ -1,5 +1,4 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
-import { getEnv } from "./functions";
 
 /**
  * The Worker base interface
@@ -31,7 +30,7 @@ export interface WorkerContract {
 export abstract class BaseWorker implements WorkerContract {
     protected abstract name: string;
 
-    public concurrency: number = 1;
+    public concurrency = 1;
 
     public abstract handler(job: Job): any;
 
@@ -40,7 +39,7 @@ export abstract class BaseWorker implements WorkerContract {
     }
 
     public getOptions(): WorkerOptions {
-        let options: WorkerOptions = {
+        const options: WorkerOptions = {
             concurrency: this.concurrency,
         };
 
@@ -51,7 +50,7 @@ export abstract class BaseWorker implements WorkerContract {
 export class QueueEngineFacade {
     protected static instances: Map<string, Queue> = new Map();
 
-    public static bootQueue(name: string, options?: QueueOptions) {
+    public static bootQueue(name: string, options?: QueueOptions): void {
         if (QueueEngineFacade.instances.has(name)) {
             throw new Error("Queue {{name}} already exists");
         }

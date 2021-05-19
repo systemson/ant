@@ -68,4 +68,8 @@ export class Logger {
     static trace(msg: string): void {
         return this.log(this.TRACE, msg);
     }
+
+    static extra(msg: string): void {
+        return this.log(this.EXTRA, msg);
+    }
 }

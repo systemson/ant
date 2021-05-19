@@ -5,7 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "serve": "nodemon server.ts",
-    "build": "tsc --project ./ && nexe ./build/server.js -r ./build/src/**/* ./node_modules/**/* -t windows-x64-12.18.2 -o ./app.exe",
+    "build": "tsc --project ./ && nexe ./build/server.js -r ./build/src/**/* ./node_modules/**/* -t windows-x64-12.18.2 -o ./build/app.exe",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "echo \"Error: no test specified\" && exit 1"

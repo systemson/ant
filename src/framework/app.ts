@@ -48,9 +48,10 @@ export class App {
         for (const workerClass of workerClasses) {
             const instance = new workerClass();
 
-            let queueName = instance.getQueueName();
+            const queueName = instance.getQueueName();
 
-            QueueEngineFacade.bootQueue(queueName)
+            QueueEngineFacade.bootQueue(queueName);
+
             const concrete = new Worker(queueName, instance.handler, instance.getOptions());
 
             concrete.on("completed", (job: Job, returnValue: any) => {
@@ -78,7 +79,7 @@ export class App {
             });
 
             concrete.on("drained", () => {
-                Logger.trace("Queue is empty");
+                Logger.extra("Queue is empty");
             });
         }
     }
