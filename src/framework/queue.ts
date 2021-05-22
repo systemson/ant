@@ -1,4 +1,5 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
+import { Lang } from "./lang";
 
 /**
  * The Worker base interface
@@ -52,7 +53,9 @@ export class QueueEngineFacade {
 
     public static bootQueue(name: string, options?: QueueOptions): void {
         if (QueueEngineFacade.instances.has(name)) {
-            throw new Error("Queue {{name}} already exists");
+            throw new Error(Lang.__("Queue {{name}} already exists", {
+                name: name,
+            }));
         }
 
         QueueEngineFacade.instances.set(name,  new Queue(name, options));
