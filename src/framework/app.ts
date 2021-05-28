@@ -12,12 +12,9 @@ export class App {
     constructor(
         protected router: Express,
         protected config: RouterConfig,
+        protected boostrap: Boostrap,
     ) {
-        const boostrap = new Boostrap();
         this.init();
-        boostrap.boot();
-        this.setRoutes(boostrap.routes);
-        this.setWorkers(boostrap.workers);
     }
 
     protected startHttpServer(): void {
@@ -85,6 +82,11 @@ export class App {
         }
     }
 
+    protected bootProviders(): void {
+        for (const providerClass of this.boostrap.providers) {
+            (new providerClass()).boot();
+        }
+    }
     
 
     /**
@@ -100,5 +102,8 @@ export class App {
      */
     public boot(): void {
         this.startHttpServer();
+        this.setRoutes(this.boostrap.routes);
+        this.setWorkers(this.boostrap.workers);
+        this.bootProviders();
     }
 }

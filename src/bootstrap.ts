@@ -3,7 +3,12 @@ import { RouteContract } from "./framework/router";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
 import { TestWorkerRoute } from "./routes/test_worker.route";
+import SockerServer from "./socket_server";
 import { TestWorker } from "./workers/test.worker";
+
+export interface ServiceProviderContract {
+    boot(): void;
+}
 
 export class Boostrap {
     /**
@@ -22,7 +27,7 @@ export class Boostrap {
         TestWorker,
     ];
 
-    public boot(): Boostrap {
-        return this;
-    }
+    public providers: (new() => ServiceProviderContract)[] = [
+        //
+    ];
 }

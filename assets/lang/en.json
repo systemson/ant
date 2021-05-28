@@ -1,9 +1,5 @@
 {
 	"Starting [{{name}}] microservice": "Starting [{{name}}] microservice",
 	"Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.": "Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.",
-	"Http server is running at [{{scheme}}://{{host}}:{{port}}]": "Http server is running at [{{scheme}}://{{host}}:{{port}}]",
-	"ok": "ok",
-	"Job [{{name}}] scheduled.": "Job [{{name}}] scheduled.",
-	"Job [{{name}}#{{id}}] completed": "Job [{{name}}#{{id}}] completed",
-	"Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}": "Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}"
+	"Http server is running at [{{scheme}}://{{host}}:{{port}}]": "Http server is running at [{{scheme}}://{{host}}:{{port}}]"
 }
