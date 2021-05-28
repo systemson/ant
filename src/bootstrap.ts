@@ -3,7 +3,6 @@ import { RouteContract } from "./framework/router";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
 import { TestWorkerRoute } from "./routes/test_worker.route";
-import SockerServer from "./socket_server";
 import { TestWorker } from "./workers/test.worker";
 
 export interface ServiceProviderContract {
