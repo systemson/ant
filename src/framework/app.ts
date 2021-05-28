@@ -15,6 +15,7 @@ export class App {
     ) {
         const boostrap = new Boostrap();
         this.init();
+        boostrap.boot();
         this.setRoutes(boostrap.routes);
         this.setWorkers(boostrap.workers);
     }

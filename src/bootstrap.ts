@@ -21,4 +21,8 @@ export class Boostrap {
     public workers: (new() => WorkerContract)[] = [
         TestWorker,
     ];
+
+    public boot(): Boostrap {
+        return this;
+    }
 }

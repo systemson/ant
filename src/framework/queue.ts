@@ -1,4 +1,5 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
+import { getEnv } from "./functions";
 import { Lang } from "./lang";
 
 /**
@@ -67,5 +68,13 @@ export class QueueEngineFacade {
         }
 
         return QueueEngineFacade.instances.get(name) as Queue;
+    }
+
+    public static add(name: string, data: any): void {
+        // Adds a job to the queue
+        QueueEngineFacade.getInstance(getEnv("APP_QUEUE_NAME")).add(name, data, {
+            removeOnComplete: true,
+            attempts: 3,
+        });
     }
 }
