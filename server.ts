@@ -7,6 +7,6 @@ import { Boostrap } from "./src/bootstrap";
 
 Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
 
-const app = new App(express(), {port: getEnv("APP_PORT")}, new Boostrap());
+const app = new App(express(), {port: getEnv("APP_REST_SERVER_PORT")}, new Boostrap());
 
 app.boot();

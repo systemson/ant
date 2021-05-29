@@ -74,7 +74,8 @@ export class QueueEngineFacade {
         // Adds a job to the queue
         QueueEngineFacade.getInstance(getEnv("APP_QUEUE_NAME")).add(name, data, {
             removeOnComplete: true,
-            attempts: 3,
+            attempts: parseInt(getEnv("APP_QUEUE_RETRIES")),
+            removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
         });
     }
 }

@@ -33,7 +33,7 @@ export class App {
 
             this.router[instance.method](instance.url, instance.handle);
 
-            Logger.trace(Lang.__("Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.", {
+            Logger.audit(Lang.__("Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.", {
                 scheme: this.config.scheme || "http",
                 host: this.config.host || "localhost",
                 port: this.config.port,
@@ -53,7 +53,7 @@ export class App {
             const concrete = new Worker(queueName, instance.handler, instance.getOptions());
 
             concrete.on("completed", (job: Job, returnValue: any) => {
-                Logger.debug(Lang.__("Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}", {
+                Logger.debug(Lang.__("Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}.", {
                     name: job.name,
                     id: job.id?.toString() as string,
                     return: JSON.stringify(returnValue, null, 4),
@@ -67,7 +67,7 @@ export class App {
             });
 
             concrete.on("failed", (job: Job, failedReason: string) => {
-                Logger.error(Lang.__("Job [{{name}}#{{id}}] failed. {{reason}}", {
+                Logger.error(Lang.__("Job [{{name}}#{{id}}] failed. {{reason}}.", {
                     name: job.name,
                     id: job.id?.toString() as string,
                     reason: failedReason,
@@ -77,7 +77,9 @@ export class App {
             });
 
             concrete.on("drained", () => {
-                Logger.extra("Queue is empty");
+                Logger.audit(Lang.__("Queue [{{name}}] is empty.", {
+                    name: queueName,
+                }));
             });
         }
     }

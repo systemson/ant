@@ -1,4 +1,7 @@
 import { getEnv } from "./functions";
+import fs from "fs";
+import moment from "moment";
+import { EOL } from "os";
 
 type LOG_LEVEL = {
     name: string;
@@ -30,19 +33,34 @@ export class Logger {
         name: "trace",
         number: 5
     }
-    static EXTRA: LOG_LEVEL = {
-        name: "trace",
+    static AUDIT: LOG_LEVEL = {
+        name: "audit",
         number: 6
     }
 
     static log(level: LOG_LEVEL, msg: string): void {
         if ( parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number ) {
-            const date = new Date();
-            
-            if (getEnv("APP_CONSOLE_LOG", "false") == "true") {
-                console.log(`[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds().toString().padEnd(3, "0")}] ${level.name.toUpperCase()}:`, msg);
-            }
+            this.doLog(moment().format("YYYY-MM-DDTHH:mm:ss.SSS"), level.name.toUpperCase(), msg);
         }
+    }
+
+    protected static doLog(date: string, level: string, msg: string): void {
+        const logLevel = level.padEnd(5, " ");
+
+        if (getEnv("APP_FILE_LOG", "false") === "true") {
+            this.fileLog(`[${date}] | ${logLevel} | ${msg}` + EOL);
+        }
+
+        if (getEnv("APP_CONSOLE_LOG", "false") === "true") {
+            console.log(`[${date}] | ${logLevel} |`, msg);
+        }
+
+    }
+
+    protected static fileLog(msg: string): void {
+        const fileName = `${getEnv("APP_NAME").toLowerCase()}-${moment().format("YYYY-MM-DD")}.log`;
+
+        fs.appendFileSync(`${getEnv("APP_FILE_LOG_DIR")}/${fileName}`, msg);
     }
 
     static fatal(msg: string): void {
@@ -69,7 +87,7 @@ export class Logger {
         return this.log(this.TRACE, msg);
     }
 
-    static extra(msg: string): void {
-        return this.log(this.EXTRA, msg);
+    static audit(msg: string): void {
+        return this.log(this.AUDIT, msg);
     }
 }
