@@ -1,6 +1,8 @@
 {
 	"Starting [{{name}}] microservice": "Starting [{{name}}] microservice",
 	"Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.": "Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.",
+	"All routes ready.": "All routes ready.",
+	"All workers ready.": "All workers ready.",
 	"Http server is running at [{{scheme}}://{{host}}:{{port}}]": "Http server is running at [{{scheme}}://{{host}}:{{port}}]",
 	"Queue [{{name}}] is empty.": "Queue [{{name}}] is empty."
 }

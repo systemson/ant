@@ -7,7 +7,7 @@ import { TestWorkerRoute } from "./routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
 
 export interface ServiceProviderContract {
-    boot(): void;
+    boot(): Promise<any>;
 }
 
 export class Boostrap {
