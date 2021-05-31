@@ -3,7 +3,6 @@ import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { ServiceProviderContract } from "../bootstrap";
 import { getEnv } from "../framework/functions";
 import { OrmFacade } from "../framework/orm_facade";
-import { Mensaje } from "../models/mensaje";
 
 class CustomNamingStrategy implements NamingStrategy {
     getClassName(file: string, separator?: string): string {
