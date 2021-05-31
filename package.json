@@ -2,6 +2,10 @@
   "name": "micra",
   "version": "1.0.0",
   "description": "NodeJS + Redis microservices framework",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/systemson/micra.git"
+  },
   "main": "server.ts",
   "scripts": {
     "serve": "nodemon server.ts",
