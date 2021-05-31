@@ -11,15 +11,4 @@ import { I18n } from "i18n";
   */
 const Lang = new I18n();
 
-/**
-  * later in code configure
-  */
-Lang.configure({
-    locales: ["en", "es"],
-    defaultLocale: getEnv("APP_LOCALE", "en"),
-    directory: path.join(process.cwd(), "assets", "lang"),
-    autoReload: true,
-    syncFiles: true,
-});
-
 export { Lang };

@@ -1,6 +1,7 @@
 import { WorkerContract } from "./framework/queue";
 import { RouteContract } from "./framework/router";
-import LogProvider from "./providers/log_provider";
+import LocaleProvider from "./providers/locale_provider";
+import FileDirectoryProvider from "./providers/log_provider";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
 import { TestWorkerRoute } from "./routes/test_worker.route";
@@ -28,6 +29,7 @@ export class Boostrap {
     ];
 
     public providers: (new() => ServiceProviderContract)[] = [
-        LogProvider
+        FileDirectoryProvider,
+        LocaleProvider
     ];
 }
