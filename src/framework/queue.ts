@@ -30,14 +30,14 @@ export interface WorkerContract {
 }
 
 export abstract class BaseWorker implements WorkerContract {
-    protected abstract name: string;
+    protected name?: string;
 
     public concurrency = 1;
 
     public abstract handler(job: Job): any;
 
     public getQueueName(): string {
-        return this.name;
+        return this.name || getEnv("APP_DEFAULT_QUEUE");;
     }
 
     public getOptions(): WorkerOptions {

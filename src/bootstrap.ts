@@ -1,11 +1,11 @@
 import { WorkerContract } from "./framework/queue";
 import { RouteContract } from "./framework/router";
+import DatabaseProvider from "./providers/database_provider";
 import LocaleProvider from "./providers/locale_provider";
-import FileDirectoryProvider from "./providers/log_provider";
+import FileDirectoryProvider from "./providers/file_directory";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
-import { TestWorkerRoute } from "./routes/test_worker.route";
-import { TestWorker } from "./workers/test.worker";
+import EntradaWorker from "./workers/entrada.worker";
 
 export interface ServiceProviderContract {
     boot(): Promise<any>;
@@ -18,18 +18,18 @@ export class Boostrap {
     public routes:  (new() => RouteContract)[] = [
         HomeRoute,
         InfoRoute,
-        TestWorkerRoute,
     ];
 
     /**
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        TestWorker,
+        EntradaWorker
     ];
 
     public providers: (new() => ServiceProviderContract)[] = [
         FileDirectoryProvider,
-        LocaleProvider
+        LocaleProvider,
+        DatabaseProvider
     ];
 }
