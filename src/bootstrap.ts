@@ -5,6 +5,7 @@ import FileDirectoryProvider from "./providers/file_directory_provider";
 import LocaleProvider from "./providers/locale_provider";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
+import EntradaWorker from "./workers/entrada.worker";
 import { TestWorker } from "./workers/test.worker";
 
 export interface ServiceProviderContract {
@@ -24,7 +25,8 @@ export class Boostrap {
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        TestWorker
+        //TestWorker,
+        EntradaWorker
     ];
 
     public providers: (new() => ServiceProviderContract)[] = [

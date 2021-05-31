@@ -31,7 +31,7 @@ class CustomNamingStrategy implements NamingStrategy {
     }
 
     protected camelCaseToSnakeCase(str: string): string {
-        return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+        return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`).replace('_', '')
     }
 
     protected snakeCaseToCamelCase(userInput: string) {
