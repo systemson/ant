@@ -51,28 +51,32 @@ export abstract class BaseWorker implements WorkerContract {
 
 export class QueueEngineFacade {
     protected static instances: Map<string, Queue> = new Map();
+    protected static default: string;
 
-    public static bootQueue(name: string, options?: QueueOptions): void {
-        if (QueueEngineFacade.instances.has(name)) {
-            throw new Error(Lang.__("Queue {{name}} already exists", {
-                name: name,
-            }));
+    public static bootQueue(name: string, options?: QueueOptions): typeof QueueEngineFacade {
+        if (!QueueEngineFacade.instances.has(name)) {
+            QueueEngineFacade.instances.set(name,  new Queue(name, options));
         }
 
-        QueueEngineFacade.instances.set(name,  new Queue(name, options));
+        return QueueEngineFacade;
     }
     
     public static getInstance(name: string): Queue {
-        if (!QueueEngineFacade.instances.has(name)) {
-            QueueEngineFacade.instances.set(name, new Queue(name));
-        }
+        this.bootQueue(name);
 
         return QueueEngineFacade.instances.get(name) as Queue;
     }
 
-    public static add(name: string, data: any): void {
-        // Adds a job to the queue
-        QueueEngineFacade.getInstance(getEnv("APP_QUEUE_NAME")).add(name, data, {
+    public static queue(name: string): typeof QueueEngineFacade {
+        this.bootQueue(name);
+
+        this.default = name;
+
+        return QueueEngineFacade;
+    }
+
+    public static add(jobName: string, data: any): void {
+        QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
             removeOnComplete: true,
             attempts: parseInt(getEnv("APP_QUEUE_RETRIES")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
