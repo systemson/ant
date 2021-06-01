@@ -43,6 +43,11 @@ export abstract class BaseWorker implements WorkerContract {
     public getOptions(): WorkerOptions {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
+            connection: {
+                host: getEnv('REDIS_HOST', 'localhost'),
+                port: parseInt(getEnv('REDIS_PORT', '6379')),
+                password: getEnv('REDIS_PASSWORD'),
+            }
         };
 
         return options;
