@@ -58,7 +58,7 @@ export class App {
 
                 QueueEngineFacade.bootQueue(queueName);
 
-                const concrete = new Worker(queueName, instance.handler, instance.getOptions());
+                const concrete = new Worker(queueName, (job: Job) => instance.handler(job), instance.getOptions());
 
                 concrete.on("completed", (job: Job, returnValue: any) => {
                     Logger.debug(Lang.__("Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}.", {
