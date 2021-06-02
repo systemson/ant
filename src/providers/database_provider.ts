@@ -55,12 +55,15 @@ export default class DatabaseProvider implements ServiceProviderContract {
         return new Promise(async () => {
             OrmFacade.orm = await MikroORM.init({
                 entities: ['./src/models/**/*.ts'],
-                dbName: getEnv('DB_NAME'),
-                type: getEnv('DB_DRIVER') as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
+                type: getEnv('DB_TYPE') as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
+                dbName: getEnv('DB_DATABASE'),
+                host: getEnv('DB_HOST', 'localhost'),
+                port: parseInt(getEnv('DB_PORT', '5432')),
+                user: getEnv('DB_USERNAME', 'postgres'),
+                password:  getEnv('DB_PASSWORD', 'postgres'),
                 metadataProvider: TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
                 cache: { enabled: false },
-                //clientUrl: '...', // defaults to 'mongodb://localhost:27017' for mongodb driver
             });
         });
     }
