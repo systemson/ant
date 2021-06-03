@@ -5,7 +5,7 @@ import { QueueEngineFacade, WorkerContract } from "./queue";
 import { RouteContract, RouteOptions, RouterConfig } from "./router";
 import { Job, Worker } from "bullmq";
 import { Express } from "express";
-import { getEnv } from "./functions";
+import { getEnv, logCatchedError } from "./functions";
 
 export class App {
     routes: Map<string, RouteOptions> = new Map();
@@ -37,15 +37,16 @@ export class App {
     
                 this.router[instance.method](instance.url, instance.handle);
     
-                Logger.audit(Lang.__("Route [{{scheme}}://{{host}}:{{port}}{{{name}}}] is ready.", {
+                Logger.audit(Lang.__("Route [{{name}} -> {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
+                    name: instance.constructor.name,
                     scheme: this.config.scheme || "http",
                     host: this.config.host || "localhost",
                     port: this.config.port,
-                    name: instance.url,
+                    endpoint: instance.url,
                 }));
             }
 
-            Logger.audit(Lang.__("All routes ready."));
+            Logger.audit(Lang.__("Routes set up completed."));
         });
     }
 
@@ -89,16 +90,26 @@ export class App {
                         name: queueName,
                     }));
                 });
+    
+                Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
+                    name: instance.constructor.name,
+                    queue: queueName,
+                }));
             }
 
-            Logger.audit(Lang.__("All workers ready."));
+            Logger.audit(Lang.__("Worker set up completed."));
         });
     }
 
     protected bootProviders(): Promise<void> {
         return new Promise(() => {
             for (const providerClass of this.boostrap.providers) {
-                (new providerClass()).boot();
+                let provider = new providerClass();
+                provider.init().then((data) => {
+                    Logger.audit(Lang.__("Booting provider [{{name}}]", {
+                        name: data.name,
+                    }));
+                }).catch(logCatchedError);
             }
         });
     }
@@ -121,9 +132,9 @@ export class App {
                 this.bootProviders();
                 Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
         
-                this.setRoutes(this.boostrap.routes);
-                this.setWorkers(this.boostrap.workers);
-                this.startHttpServer();
+                this.setRoutes(this.boostrap.routes).then().catch(logCatchedError);
+                this.setWorkers(this.boostrap.workers).then().catch(logCatchedError);
+                this.startHttpServer().then().catch(logCatchedError);
                 
             } catch (error) {
                 rejects();

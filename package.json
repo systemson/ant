@@ -20,6 +20,7 @@
     "@mikro-orm/core": "^4.5.5",
     "@mikro-orm/postgresql": "^4.5.5",
     "@mikro-orm/reflection": "^4.5.5",
+    "@types/redis": "^2.8.29",
     "axios": "^0.21.1",
     "bullmq": "^1.24.3",
     "dotenv": "^8.6.0",

@@ -1,8 +1,10 @@
 import { MikroORM, NamingStrategy } from "@mikro-orm/core";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
-import { ServiceProviderContract } from "../bootstrap";
-import { getEnv } from "../framework/functions";
+import { ServiceProvider } from "../framework/service_provider";
+import { getEnv, logCatchedError } from "../framework/functions";
 import { OrmFacade } from "../framework/orm_facade";
+import { Logger } from "../framework/logger";
+import { Lang } from "../framework/lang";
 
 class CustomNamingStrategy implements NamingStrategy {
     getClassName(file: string, separator?: string): string {
@@ -50,10 +52,10 @@ class CustomNamingStrategy implements NamingStrategy {
     }
 }
 
-export default class DatabaseProvider implements ServiceProviderContract {
+export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise(async () => {
-            OrmFacade.orm = await MikroORM.init({
+            MikroORM.init({
                 entities: ['./src/models/**/*.ts'],
                 type: getEnv('DB_TYPE') as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
                 dbName: getEnv('DB_DATABASE'),
@@ -64,7 +66,12 @@ export default class DatabaseProvider implements ServiceProviderContract {
                 metadataProvider: TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
                 cache: { enabled: false },
-            });
+            }).then((orm) => {
+                OrmFacade.orm = orm;
+                Logger.audit(Lang.__("ORM [{{name}}] started.", {
+                    name: orm.constructor.name,
+                }));
+            }).catch(logCatchedError);
         });
     }
 }
