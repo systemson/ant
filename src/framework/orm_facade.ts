@@ -12,6 +12,6 @@ export class OrmFacade {
     }
 
     public static get em(): EntityManager<IDatabaseDriver<Connection>> {
-        return this.ormInstance.em;
+        return this.ormInstance.em.fork();
     }
 }
