@@ -65,7 +65,6 @@ export default class DatabaseProvider extends ServiceProvider {
                 password:  getEnv("DB_PASSWORD", "postgres"),
                 metadataProvider: TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
-                cache: { enabled: false },
             }).then((orm) => {
                 OrmFacade.orm = orm;
                 Logger.audit(Lang.__("ORM [{{name}}] started.", {
