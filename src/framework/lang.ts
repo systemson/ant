@@ -1,6 +1,3 @@
-import path from "path";
-import { getEnv } from "./functions";
-
 /**
  * require I18n with capital I as constructor
  */

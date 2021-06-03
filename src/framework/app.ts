@@ -104,7 +104,7 @@ export class App {
     protected bootProviders(): Promise<void> {
         return new Promise(() => {
             for (const providerClass of this.boostrap.providers) {
-                let provider = new providerClass();
+                const provider = new providerClass();
                 provider.init().then((data) => {
                     Logger.audit(Lang.__("Booting provider [{{name}}]", {
                         name: data.name,
