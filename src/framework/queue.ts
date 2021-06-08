@@ -1,6 +1,6 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
 import { getEnv, logCatchedError } from "./functions";
-import IORedis from "ioredis";
+import IORedis, { Redis } from "ioredis";
 
 /**
  * The Worker base interface
@@ -34,7 +34,7 @@ export abstract class BaseWorker implements WorkerContract {
 
     public concurrency = parseInt(getEnv("APP_QUEUE_CONCURRENCY", "1"));
 
-    public connection!: IORedis.Redis;
+    public connection!: Redis;
 
     public abstract handler(job: Job): any;
 
@@ -42,7 +42,7 @@ export abstract class BaseWorker implements WorkerContract {
         return this.queueName || getEnv("APP_DEFAULT_QUEUE", "default");
     }
 
-    protected getConnection(): IORedis.Redis {
+    protected getConnection(): Redis {
         if (typeof this.connection === "undefined") {
             this.connection = new IORedis(
                 parseInt(getEnv("REDIS_PORT", "6379")),

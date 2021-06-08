@@ -7,6 +7,7 @@ import LocaleProvider from "./providers/locale_provider";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
 import LogProvider from "./providers/log_provider";
+import CacheProvider from "./providers/cache_provider";
 
 export class Boostrap {
 
@@ -17,6 +18,7 @@ export class Boostrap {
         FileDirectoryProvider,
         LocaleProvider,
         LogProvider,
+        CacheProvider,
         DatabaseProvider
     ];
 

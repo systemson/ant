@@ -113,7 +113,7 @@ export class App {
             for (const providerClass of this.boostrap.providers) {
                 const provider = new providerClass();
                 provider.init().then((data) => {
-                    Logger.audit(Lang.__("Booting provider [{{name}}]", {
+                    Logger.audit(Lang.__("Booting service provider [{{name}}]", {
                         name: data.name,
                     }));
                 }).catch(logCatchedError);
