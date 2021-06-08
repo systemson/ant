@@ -4,11 +4,42 @@ import moment from "moment";
 import { EOL } from "os";
 
 type LOG_LEVEL = {
-    name: string;
-    number: number
+    name: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | "audit";
+    number: number;
 };
 
+export interface LogDriverContract {
+    log(msg: string): Promise<void>;
+}
+
+export class ConsoleLogger implements LogDriverContract {
+    log(msg: string): Promise<void> {
+        return new Promise(() => {
+            console.log(msg);
+        })
+    }
+
+}
+
+export class FileLogger implements LogDriverContract {
+    public constructor(
+        public folder: string,
+        public name: string,
+        public dateFormat: string = "YYYY-MM-DD",
+    ) {}
+
+    log(msg: string): Promise<void>  {
+        return new Promise(() => {
+            const fileName = `${this.name.toLowerCase()}-${moment().format(this.dateFormat)}.log`;
+
+            fs.appendFileSync(`${this.folder}/${fileName}`, msg + EOL);
+        });
+    }
+}
+
 export class Logger {
+    protected static instances: {driver: LogDriverContract; can: boolean}[] = [];
+
     static FATAL: LOG_LEVEL = {
         name: "fatal",
         number: 0
@@ -38,56 +69,53 @@ export class Logger {
         number: 6
     }
 
-    static log(level: LOG_LEVEL, msg: string): void {
-        if ( parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number ) {
-            this.doLog(moment().format("YYYY-MM-DDTHH:mm:ss.SSS"), level.name.toUpperCase(), msg);
-        }
+    static log(level: LOG_LEVEL, msg: string): Promise<void> {
+        return new Promise(() => {
+            if ( parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number ) {
+                this.doLog(moment().format("YYYY-MM-DDTHH:mm:ss.SSS"), level.name.toUpperCase(), msg);
+            }
+        });
     }
 
     protected static doLog(date: string, level: string, msg: string): void {
         const logLevel = level.padEnd(5, " ");
 
-        if (getEnv("APP_FILE_LOG", "false") === "true") {
-            this.fileLog(`[${date}] | ${logLevel} | ${msg}` + EOL);
+        for (const instance of this.instances) {
+            if (instance.can) {
+                instance.driver.log(`[${date}] | ${logLevel} | ${msg}`)
+            }
         }
-
-        if (getEnv("APP_CONSOLE_LOG", "false") === "true") {
-            console.log(`[${date}] | ${logLevel} |`, msg);
-        }
-
     }
 
-    protected static fileLog(msg: string): void {
-        const fileName = `${getEnv("APP_NAME").toLowerCase()}-${moment().format("YYYY-MM-DD")}.log`;
-
-        fs.appendFileSync(`${getEnv("APP_FILE_LOG_DIR")}/${fileName}`, msg);
-    }
-
-    static fatal(msg: string): void {
+    static fatal(msg: string): Promise<void>  {
         return this.log(this.FATAL, msg);
     }
 
-    static error(msg: string): void {
+    static error(msg: string): Promise<void>  {
         return this.log(this.ERROR, msg);
     }
 
-    static warn(msg: string): void {
+    static warn(msg: string): Promise<void>  {
         return this.log(this.WARN, msg);
     }
 
-    static info(msg: string): void {
+    static info(msg: string): Promise<void>  {
         return this.log(this.INFO, msg);
     }
 
-    static debug(msg: string): void {
+    static debug(msg: string): Promise<void>  {
         return this.log(this.DEBUG, msg);
     }
 
-    static trace(msg: string): void {
+    static trace(msg: string): Promise<void>  {
         return this.log(this.TRACE, msg);
     }
 
-    static audit(msg: string): void {
+    static audit(msg: string): Promise<void>  {
         return this.log(this.AUDIT, msg);
+    }
+
+    public static pushDriver(driver: LogDriverContract, can: boolean = true) {
+        this.instances.push({driver: driver, can: can})
     }
 }

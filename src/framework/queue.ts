@@ -32,14 +32,14 @@ export interface WorkerContract {
 export abstract class BaseWorker implements WorkerContract {
     protected queueName!: string;
 
-    public concurrency = parseInt(getEnv("APP_QUEUE_CONCURRENCY", '1'));
+    public concurrency = parseInt(getEnv("APP_QUEUE_CONCURRENCY", "1"));
 
     public connection!: IORedis.Redis;
 
     public abstract handler(job: Job): any;
 
     public getQueueName(): string {
-        return this.queueName || getEnv("APP_DEFAULT_QUEUE", 'default');
+        return this.queueName || getEnv("APP_DEFAULT_QUEUE", "default");
     }
 
     protected getConnection(): IORedis.Redis {

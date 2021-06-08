@@ -6,6 +6,7 @@ import FileDirectoryProvider from "./providers/file_directory_provider";
 import LocaleProvider from "./providers/locale_provider";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
+import LogProvider from "./providers/log_provider";
 
 export class Boostrap {
 
@@ -15,6 +16,7 @@ export class Boostrap {
     public providers: (new() => ServiceProviderContract)[] = [
         FileDirectoryProvider,
         LocaleProvider,
+        LogProvider,
         DatabaseProvider
     ];
 
