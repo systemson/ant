@@ -16,7 +16,7 @@ export class ConsoleLogger implements LogDriverContract {
     log(msg: string): Promise<void> {
         return new Promise(() => {
             console.log(msg);
-        })
+        });
     }
 
 }
@@ -82,7 +82,7 @@ export class Logger {
 
         for (const instance of this.instances) {
             if (instance.can) {
-                instance.driver.log(`[${date}] | ${logLevel} | ${msg}`)
+                instance.driver.log(`[${date}] | ${logLevel} | ${msg}`);
             }
         }
     }
@@ -115,7 +115,7 @@ export class Logger {
         return this.log(this.AUDIT, msg);
     }
 
-    public static pushDriver(driver: LogDriverContract, can: boolean = true) {
-        this.instances.push({driver: driver, can: can})
+    public static pushDriver(driver: LogDriverContract, can = true): void {
+        this.instances.push({driver: driver, can: can});
     }
 }

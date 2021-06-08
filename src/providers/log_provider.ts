@@ -14,6 +14,6 @@ export default class LogProvider extends ServiceProvider {
                 new FileLogger(getEnv("APP_FILE_LOG_DIR"), getEnv("APP_NAME")),
                 getEnv("APP_FILE_LOG", "false") === "true"
             );
-        })
+        });
     }
 }
