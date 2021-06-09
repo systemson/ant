@@ -19,5 +19,4 @@ export function logCatchedError(error?: {message?: string; stack?: string;}): vo
     Logger.fatal("An unrecoverable error has occurred. Shutting down application.");
     Logger.fatal(error?.message || "");
     Logger.error(error?.stack || "");
-    process.exit();
 }
