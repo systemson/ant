@@ -17,6 +17,6 @@ export function logCatchedException(error?: {message?: string; stack?: string;})
     process.exit();
 }
 export function logCatchedError(error?: {message?: string; stack?: string;}): void {
-    Logger.fatal(error?.message || "");
-    Logger.error(error?.stack || "");
+    Logger.error(error?.message || "");
+    Logger.trace(error?.stack || "");
 }
