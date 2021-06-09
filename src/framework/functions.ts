@@ -13,10 +13,10 @@ export function getEnv(key: string, fallback?: string): string {
 
 export function logCatchedException(error?: {message?: string; stack?: string;}): void {
     logCatchedError(error);
+    Logger.fatal("An unrecoverable error has occurred. Shutting down application.");
     process.exit();
 }
 export function logCatchedError(error?: {message?: string; stack?: string;}): void {
-    Logger.fatal("An unrecoverable error has occurred. Shutting down application.");
     Logger.fatal(error?.message || "");
     Logger.error(error?.stack || "");
 }
