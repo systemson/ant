@@ -1,8 +1,8 @@
 import { Redis } from "ioredis";
-import V8 from "v8";
+import { logCatchedError } from "./functions";
 
 export interface CacheDriverContract {
-    set(key: string, value: any, ttl: number): Promise<void>;
+    set(key: string, value: any, ttl?: number): Promise<void>;
     has(key: string): Promise<boolean>;
     get(key: string, def?: any): Promise<any>;
     unset(key: string): Promise<void>;
@@ -11,31 +11,37 @@ export interface CacheDriverContract {
 export class RedisChacheDriver implements CacheDriverContract {
     constructor(protected client: Redis) { }
 
-    set(key: string, value: any, ttl: number): Promise<void> {
-        return new Promise(async (resolve: CallableFunction) => {
-            resolve(await this.client.set(key, value));
-        })
+    set(key: string, value: any, ttl?: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.client.set(key, value).then(() => resolve(), reject);
+        });
     }
 
     has(key: string): Promise<boolean> {
-        return new Promise(async (resolve: CallableFunction) => {
-            resolve(await this.client.exists(key) > 0);
+        return new Promise((resolve: CallableFunction, reject: any) => {
+            this.client.exists(key).then((value: number) => {
+                resolve(value > 0);
+            }, reject);
         });
     }
 
     get(key: string, def?: any): Promise<any> {
-        return new Promise(async (resolve: CallableFunction) => {
-            if (this.has(key)) {
-                resolve(await this.client.get(key) as string);
-            }
-
-            return def;
+        return new Promise((resolve, reject) => {
+            this.client.get(key).then((value: any) => {
+                if (value) {
+                    resolve(value);
+                } else {
+                    resolve(def);
+                }
+            }, reject);
         });
     }
 
     unset(key: string): Promise<void> {
-        return new Promise(async (resolve: CallableFunction) => {
-            resolve(await this.client.del(key));
+        return new Promise((resolve, reject) => {
+            this.client.del(key).then(() => {
+                resolve();
+            }, reject);
         });
     }
 }
@@ -47,39 +53,42 @@ export class CacheFacade {
         this.driver = driver;
     }
 
-    public static set(key: string, value: any, ttl: number): Promise<void> {
-        return new Promise(async (resolve, reject) => {
-            return resolve(await this.driver.set(key, value, ttl));
+    public static set(key: string, value: any, ttl?: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.driver.set(key, value, ttl).then(resolve, reject).catch(logCatchedError);
         });
     }
 
     public static has(key: string): Promise<boolean> {
-        return new Promise(async (resolve: CallableFunction) => {
-            return resolve(await this.driver.has(key));
+        return new Promise((resolve, reject) => {
+            this.driver.has(key).then(resolve, reject).catch(logCatchedError);
         });
     }
 
     public static get(key: string, def?: any): Promise<any> {
-        return new Promise(async (resolve: CallableFunction) => {
-            resolve(await this.driver.get(key));
+        return new Promise((resolve, reject) => {
+            this.driver.get(key, def).then(resolve, reject).catch(logCatchedError);
         });
     }
 
     public static unset(key: string): Promise<void> {
-        return new Promise(async (resolve: CallableFunction) => {
-            resolve(await this.driver.unset(key));
+        return new Promise((resolve, reject) => {
+            this.driver.unset(key).then(resolve, reject).catch(logCatchedError);
         });
     }
 
-    public static call(key: string, callback: CallableFunction, ttl: number): Promise<any> {
-        return new Promise(async (resolve: CallableFunction) => {
-            if (!this.driver.has(key)) {
-                const value = callback();
+    public static call(key: string, callback: () => any, ttl?: number): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.driver.has(key).then((has: boolean) => {
+                if (!has) {
+                    const value = callback();
+                    this.driver.set(key, value, ttl).then(() => {
+                        this.driver.get(key).then(resolve, reject);
+                    });
+                }
 
-                await this.driver.set(key, value, ttl);
-            }
-
-            resolve(await this.driver.get(key));
-        })
+                this.driver.get(key).then(resolve, reject);
+            });
+        });
     }
 }

@@ -6,7 +6,7 @@ import { CacheFacade, RedisChacheDriver } from "../framework/cache";
 export default class CacheProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise(() => {
-           const redisClient = new IORedis(
+            const redisClient = new IORedis(
                 parseInt(getEnv("REDIS_PORT", "6379")),
                 getEnv("REDIS_HOST", "localhost"),
                 {

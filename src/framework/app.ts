@@ -5,7 +5,7 @@ import { QueueEngineFacade, WorkerContract } from "./queue";
 import { RouteContract, RouteOptions, RouterConfig } from "./router";
 import { Job, Worker } from "bullmq";
 import { Express } from "express";
-import { getEnv, logCatchedError } from "./functions";
+import { getEnv, logCatchedException } from "./functions";
 
 export class App {
     routes: Map<string, RouteOptions> = new Map();
@@ -116,7 +116,7 @@ export class App {
                     Logger.audit(Lang.__("Booting service provider [{{name}}]", {
                         name: data.name,
                     }));
-                }).catch(logCatchedError);
+                }).catch(logCatchedException);
             }
         });
     }
@@ -139,9 +139,9 @@ export class App {
                 this.bootProviders();
                 Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
         
-                this.setRoutes(this.boostrap.routes).then().catch(logCatchedError);
-                this.setWorkers(this.boostrap.workers).then().catch(logCatchedError);
-                this.startHttpServer().then().catch(logCatchedError);
+                this.setRoutes(this.boostrap.routes).then().catch(logCatchedException);
+                this.setWorkers(this.boostrap.workers).then().catch(logCatchedException);
+                this.startHttpServer().then().catch(logCatchedException);
                 
             } catch (error) {
                 rejects();
