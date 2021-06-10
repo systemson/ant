@@ -5,9 +5,9 @@ import { Lang } from "../framework/lang";
 export class InfoRoute extends BaseRoute {
     url = "/info";
 
-    method: Method = 'get';
+    method: Method = "get";
 
-    handle(req: Request, res: Response): Response {
-        return res.send({ status: Lang.__("active")});
+    handle(req: Request, res: Response): void {
+        res.send({ status: Lang.__("active")});
     } 
 }

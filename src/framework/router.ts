@@ -21,7 +21,7 @@ export interface RouteContract {
     url: string;
     method: Method;
 
-    handle(req: Request, res: Response): Response;
+    handle(req: Request, res: Response): void;
 }
 
 export abstract class BaseRoute implements RouteContract {
@@ -29,5 +29,5 @@ export abstract class BaseRoute implements RouteContract {
 
     abstract method: Method;
 
-    abstract handle(req: Request, res: Response): Response;
+    abstract handle(req: Request, res: Response): void;
 }

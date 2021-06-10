@@ -6,10 +6,10 @@ import { getEnv } from "../framework/functions";
 export class HomeRoute extends BaseRoute {
     url = "/";
 
-    method: Method = 'get';
+    method: Method = "get";
 
-    handle(req: Request, res: Response): Response {
-        return res.send({
+    handle(req: Request, res: Response): void {
+        res.send({
             status: Lang.__("active"),
             message:  Lang.__("The {{name}} microservice is running.", {
                 name: getEnv("APP_NAME"),

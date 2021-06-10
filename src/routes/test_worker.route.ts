@@ -6,9 +6,9 @@ import { QueueEngineFacade } from "../framework/queue";
 export class TestWorkerRoute extends BaseRoute {
     url = "/test";
 
-    method: Method = 'get';
+    method: Method = "get";
 
-    handle(req: Request, res: Response): Response {
+    handle(req: Request, res: Response): void {
         const job = "queue_test";
 
         const status = req.query.status;
@@ -16,7 +16,7 @@ export class TestWorkerRoute extends BaseRoute {
         // Adds a job to the queue
         QueueEngineFacade.add(job, {name: status});
 
-        return res.send({
+        res.send({
             status: Lang.__("ok"),
             messaje: Lang.__("Job [{{name}}] scheduled.", {
                 name: job,
