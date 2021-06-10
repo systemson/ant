@@ -9,7 +9,7 @@ export type RouterConfig = {
 /**
  * The HTTP Rest methods.
  */
-type Method = "get" | "post" | "put" | "patch" | "delete";
+export type Method = "get" | "post" | "put" | "patch" | "delete";
 
 export type RouteOptions = {
     name?: string;
@@ -26,7 +26,8 @@ export interface RouteContract {
 
 export abstract class BaseRoute implements RouteContract {
     url = "/";
-    method: Method = "get";
+
+    abstract method: Method;
 
     abstract handle(req: Request, res: Response): Response;
 }
