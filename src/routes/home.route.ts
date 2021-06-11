@@ -11,7 +11,7 @@ export class HomeRoute extends BaseRoute {
     handle(req: Request, res: Response): void {
         res.send({
             status: Lang.__("active"),
-            message:  Lang.__("The {{name}} microservice is running.", {
+            message:  Lang.__("The [{{name}}] microservice is up and running.", {
                 name: getEnv("APP_NAME"),
             }),
         });
