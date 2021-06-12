@@ -38,12 +38,13 @@ export class App {
 
                     this.router[instance.method](instance.url, (req, res) => instance.handle(req, res));
 
-                    Logger.audit(Lang.__("Route [{{name}} -> {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
+                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
                         name: instance.constructor.name,
                         scheme: this.config.scheme || "http",
                         host: this.config.host || "localhost",
                         port: this.config.port,
                         endpoint: instance.url,
+                        method: instance.method.toLocaleUpperCase(),
                     }));
                 }
                 Logger.audit(Lang.__("Routes set up completed."));
