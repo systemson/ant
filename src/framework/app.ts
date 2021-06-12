@@ -35,9 +35,9 @@ export class App {
             if (routeClasses.length > 0) {
                 for (const routeClass of routeClasses) {
                     const instance = new routeClass() as RouteContract;
-        
-                    this.router[instance.method](instance.url, instance.handle);
-        
+
+                    this.router[instance.method](instance.url, (req, res) => instance.handle(req, res));
+
                     Logger.audit(Lang.__("Route [{{name}} -> {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
                         name: instance.constructor.name,
                         scheme: this.config.scheme || "http",
