@@ -1,5 +1,5 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
-import { getEnv, logCatchedError } from "./functions";
+import { getEnv } from "./functions";
 import IORedis, { Redis } from "ioredis";
 
 /**
@@ -44,7 +44,7 @@ export abstract class BaseWorker implements WorkerContract {
 
     protected getConnection(): Redis {
         if (typeof this.connection === "undefined") {
-            this.connection = new IORedis(
+            const redis = new IORedis(
                 parseInt(getEnv("REDIS_PORT", "6379")),
                 getEnv("REDIS_HOST", "localhost"),
                 {
@@ -52,7 +52,7 @@ export abstract class BaseWorker implements WorkerContract {
                 }
             );
 
-            this.connection.on("error", logCatchedError);
+            this.connection = redis;
         }
         return this.connection;
     }
@@ -60,7 +60,7 @@ export abstract class BaseWorker implements WorkerContract {
     public getOptions(): WorkerOptions {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
-            connection: this.getConnection()
+            connection: this.getConnection(),
         };
 
         return options;

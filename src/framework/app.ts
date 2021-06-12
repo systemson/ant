@@ -38,7 +38,7 @@ export class App {
 
                     this.router[instance.method](instance.url, (req, res) => instance.handle(req, res));
 
-                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
+                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}){{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
                         name: instance.constructor.name,
                         scheme: this.config.scheme || "http",
                         host: this.config.host || "localhost",
@@ -62,7 +62,7 @@ export class App {
 
                     const queueName = instance.getQueueName();
 
-                    QueueEngineFacade.bootQueue(queueName);
+                    QueueEngineFacade.bootQueue(queueName, {connection: instance.getOptions().connection});
 
                     const concrete = new Worker(queueName, (job: Job) => instance.handler(job), instance.getOptions());
 

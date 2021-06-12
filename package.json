@@ -9,7 +9,7 @@
   },
   "main": "./build/server.js",
   "scripts": {
-    "serve": "nodemon server.ts --ignore ./assets/ --ignore ./temp/",
+    "serve": "nodemon server.ts",
     "build": "tsc --project ./ && nexe ./build/server.js -r ./build/src/**/* ./node_modules/**/* -o ./app.exe --verbose",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
@@ -21,12 +21,14 @@
     "@mikro-orm/core": "^4.5.6",
     "@mikro-orm/postgresql": "^4.5.6",
     "@mikro-orm/reflection": "^4.5.6",
+    "@types/ioredis": "^4.26.4",
     "@types/redis": "^2.8.29",
     "axios": "^0.21.1",
-    "bullmq": "^1.32.0",
+    "bullmq": "^1.34.0",
     "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "i18n": "^0.13.3",
+    "ioredis": "^4.27.5",
     "moment": "^2.29.1"
   },
   "devDependencies": {
@@ -40,5 +42,21 @@
     "nodemon": "^2.0.7",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.2"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "server.ts",
+      "src/*",
+      ".env"
+    ],
+    "ignore": [
+      "assets/*",
+      "build/*",
+      "logs/*",
+      "temp/*"
+    ],
+    "verbose": true,
+    "delay": 2500,
+    "ext": "ts"
   }
 }
