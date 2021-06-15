@@ -2,7 +2,7 @@ import { Boostrap } from "../bootstrap";
 import { Lang } from "../framework/lang";
 import { Logger } from "./logger";
 import { QueueEngineFacade, WorkerContract } from "./queue";
-import { RouteContract, RouteOptions, RouterConfig } from "./router";
+import { Response, RouteOptions, RouterConfig, RouteContract, ResponseContainer } from "./router";
 import { Job, Worker } from "bullmq";
 import { Express } from "express";
 import { getEnv, logCatchedError, logCatchedException } from "./functions";
@@ -37,8 +37,8 @@ export class App {
                     const instance = new routeClass() as RouteContract;
 
                     this.router[instance.method](instance.url, (req, res) => {
-                        instance.doHandle(req).then((data) => {
-                            res.send(data);
+                        instance.doHandle(req, new ResponseContainer()).then((response: Response) => {
+                            res.status(response.getStatus() || 200).send(response.getData());
                         }, (error) => {
                             res.status(500).send(error);
                             logCatchedError(error);

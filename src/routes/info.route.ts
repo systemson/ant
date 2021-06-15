@@ -1,4 +1,4 @@
-import { BaseRoute, Method } from "../framework/router";
+import { BaseRoute, Method, Request, Response } from "../framework/router";
 import { Lang } from "../framework/lang";
 import { getEnv } from "../framework/functions";
 
@@ -7,12 +7,12 @@ export class InfoRoute extends BaseRoute {
 
     method: Method = "get";
 
-    handle(): any {
-        return {
+    handle(req: Request, res: Response): Response {
+        return res.setData({
             status: Lang.__("active"),
             message:  Lang.__("The [{{name}}] microservice is up and running.", {
                 name: getEnv("APP_NAME", "Micra"),
             }),
-        };
+        });
     } 
 }

@@ -1,5 +1,4 @@
-import { BaseRoute, Method } from "../framework/router";
-import { Request } from "express";
+import { BaseRoute, Method, Request, Response } from "../framework/router";
 import { Lang } from "../framework/lang";
 import { QueueEngineFacade } from "../framework/queue";
 
@@ -8,7 +7,7 @@ export class TestWorkerRoute extends BaseRoute {
 
     method: Method = "get";
 
-    async handle(req: Request): Promise<any> {
+    async handle(req: Request, res: Response): Promise<Response> {
         const job = "queue_test";
 
         const status = req.query.status;
@@ -16,11 +15,11 @@ export class TestWorkerRoute extends BaseRoute {
         // Adds a job to the queue
         await QueueEngineFacade.add(job, {name: status});
 
-        return {
+        return res.setData({
             status: Lang.__("ok"),
             messaje: Lang.__("Job [{{name}}] scheduled.", {
                 name: job,
             })
-        };
+        });
     } 
 }

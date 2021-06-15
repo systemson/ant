@@ -1,4 +1,4 @@
-import { Request, RequestHandler } from "express";
+import { Request as ExpressRequest, RequestHandler } from "express";
 
 export type RouterConfig = {
     scheme?: string;
@@ -21,9 +21,46 @@ export interface RouteContract {
     url: string;
     method: Method;
 
-    handle(req: Request): Promise<any> | any;
+    handle(req: Request, res: Response): Promise<Response> | Response;
     
-    doHandle(req: Request): Promise<any>;
+    doHandle(req: Request, res: Response): Promise<Response>;
+}
+
+export interface Response {
+    setData(data: unknown): Response;
+    getData(): unknown;
+
+    setStatus(code: number): Response;
+    getStatus(): number;
+}
+
+export type Request = ExpressRequest
+
+export class ResponseContainer implements Response {
+    protected content?: any;
+
+    protected codeStatus = 200;
+
+    setStatus(code: number): Response {
+        this.codeStatus = code;
+
+        return this;
+    }
+
+    setData(data: unknown): Response {
+        this.content = data;
+
+        return this;
+    }
+
+    getStatus(): number {
+        return this.codeStatus;
+    }
+
+    getData(): unknown {
+        return this.content;
+    }
+
 }
 
 export abstract class BaseRoute implements RouteContract {
@@ -31,17 +68,17 @@ export abstract class BaseRoute implements RouteContract {
 
     abstract method: Method;
 
-    abstract handle(req: Request): Promise<any> | any;
+    abstract handle(req: Request, res: Response): Promise<Response> | Response;
 
-    doHandle(req: Request): Promise<any> {
-        const response = this.handle(req);
+    doHandle(req: Request, res: Response): Promise<Response> {
+        const response = this.handle(req, res);
 
         if (response instanceof Promise) {
             return response;
         }
 
         return new Promise((resolve) => {
-            resolve(response);
+            resolve(response as Response);
         });
     }
 }
