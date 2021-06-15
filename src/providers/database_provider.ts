@@ -1,13 +1,13 @@
-import { MikroORM, NamingStrategy } from "@mikro-orm/core";
+import { MikroORM, NamingStrategy, ReflectMetadataProvider } from "@mikro-orm/core";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { ServiceProvider } from "../framework/service_provider";
-import { getEnv, logCatchedError } from "../framework/functions";
+import { getEnv, logCatchedException } from "../framework/functions";
 import { OrmFacade } from "../framework/orm_facade";
 import { Logger } from "../framework/logger";
 import { Lang } from "../framework/lang";
 
 class CustomNamingStrategy implements NamingStrategy {
-    getClassName(file: string, separator?: string): string {
+    getClassName(file: string): string {
         return this.snakeCaseToCamelCase(file);
     }
     classToMigrationName(timestamp: string): string {
@@ -56,14 +56,14 @@ export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise(() => {
             MikroORM.init({
-                entities: ["./src/models/**/*.ts"],
+                entities: getEnv("APP_MODE", "production") === "production" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
                 type: getEnv("DB_TYPE") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
                 dbName: getEnv("DB_DATABASE"),
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
                 user: getEnv("DB_USERNAME", "postgres"),
                 password:  getEnv("DB_PASSWORD", "postgres"),
-                metadataProvider: TsMorphMetadataProvider,
+                metadataProvider: getEnv("APP_MODE", "production") === "production" ? ReflectMetadataProvider : TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
                 cache: {
                     pretty: true,
@@ -76,7 +76,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 Logger.audit(Lang.__("ORM [{{name}}] started.", {
                     name: orm.constructor.name,
                 }));
-            }).catch(logCatchedError);
+            }).catch(logCatchedException);
         });
     }
 }

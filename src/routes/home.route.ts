@@ -1,5 +1,4 @@
 import { BaseRoute, Method } from "../framework/router";
-import { Request, Response } from "express";
 import { Lang } from "../framework/lang";
 import { getEnv } from "../framework/functions";
 
@@ -8,12 +7,12 @@ export class HomeRoute extends BaseRoute {
 
     method: Method = "get";
 
-    handle(req: Request, res: Response): void {
-        res.send({
+    handle(): any {
+        return {
             status: Lang.__("active"),
-            message:  Lang.__("The [{{name}}] microservice is up and running.", {
-                name: getEnv("APP_NAME"),
+            message:  Lang.__("Welcome to the [{{name}}] microservice.", {
+                name: getEnv("APP_NAME", "Micra"),
             }),
-        });
+        };
     } 
 }

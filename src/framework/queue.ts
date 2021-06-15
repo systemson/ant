@@ -93,8 +93,8 @@ export class QueueEngineFacade {
         return QueueEngineFacade;
     }
 
-    public static add(jobName: string, data: any): void {
-        QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
+    public static add(jobName: string, data: unknown): Promise<unknown> {
+        return QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
             removeOnComplete: true,
             attempts: parseInt(getEnv("APP_QUEUE_RETRIES")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",

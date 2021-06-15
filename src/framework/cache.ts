@@ -2,18 +2,18 @@ import { Redis } from "ioredis";
 import { logCatchedError } from "./functions";
 
 export interface CacheDriverContract {
-    set(key: string, value: any, ttl?: number): Promise<void>;
+    set(key: string, value: unknown, ttl?: number): Promise<void>;
     has(key: string): Promise<boolean>;
-    get(key: string, def?: any): Promise<any>;
+    get(key: string, def?: unknown): Promise<any>;
     unset(key: string): Promise<void>;
 }
 
 export class RedisChacheDriver implements CacheDriverContract {
     constructor(protected client: Redis) { }
 
-    set(key: string, value: any, ttl?: number): Promise<void> {
+    set(key: string, value: unknown, ttl?: number): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.client.set(key, value).then(() => resolve(), reject);
+            this.client.set(key, value as any, "ex", ttl).then(() => resolve(), reject);
         });
     }
 
@@ -25,9 +25,9 @@ export class RedisChacheDriver implements CacheDriverContract {
         });
     }
 
-    get(key: string, def?: any): Promise<any> {
+    get(key: string, def?: unknown): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.client.get(key).then((value: any) => {
+            this.client.get(key).then((value: unknown) => {
                 if (value) {
                     resolve(value);
                 } else {
@@ -53,7 +53,7 @@ export class CacheFacade {
         this.driver = driver;
     }
 
-    public static set(key: string, value: any, ttl?: number): Promise<void> {
+    public static set(key: string, value: unknown, ttl?: number): Promise<void> {
         return new Promise((resolve, reject) => {
             this.driver.set(key, value, ttl).then(resolve, reject).catch(logCatchedError);
         });
@@ -65,7 +65,7 @@ export class CacheFacade {
         });
     }
 
-    public static get(key: string, def?: any): Promise<any> {
+    public static get(key: string, def?: unknown): Promise<any> {
         return new Promise((resolve, reject) => {
             this.driver.get(key, def).then(resolve, reject).catch(logCatchedError);
         });

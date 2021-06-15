@@ -5,7 +5,7 @@ import { QueueEngineFacade, WorkerContract } from "./queue";
 import { RouteContract, RouteOptions, RouterConfig } from "./router";
 import { Job, Worker } from "bullmq";
 import { Express } from "express";
-import { getEnv, logCatchedException } from "./functions";
+import { getEnv, logCatchedError, logCatchedException } from "./functions";
 
 export class App {
     routes: Map<string, RouteOptions> = new Map();
@@ -36,9 +36,16 @@ export class App {
                 for (const routeClass of routeClasses) {
                     const instance = new routeClass() as RouteContract;
 
-                    this.router[instance.method](instance.url, (req, res) => instance.handle(req, res));
+                    this.router[instance.method](instance.url, (req, res) => {
+                        instance.doHandle(req).then((data) => {
+                            res.send(data);
+                        }, (error) => {
+                            res.status(500).send(error);
+                            logCatchedError(error);
+                        }).catch(logCatchedError);
+                    });
 
-                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}){{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
+                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
                         name: instance.constructor.name,
                         scheme: this.config.scheme || "http",
                         host: this.config.host || "localhost",

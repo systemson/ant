@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from "express";
+import { Request, RequestHandler } from "express";
 
 export type RouterConfig = {
     scheme?: string;
@@ -21,7 +21,9 @@ export interface RouteContract {
     url: string;
     method: Method;
 
-    handle(req: Request, res: Response): void;
+    handle(req: Request): Promise<any> | any;
+    
+    doHandle(req: Request): Promise<any>;
 }
 
 export abstract class BaseRoute implements RouteContract {
@@ -29,5 +31,17 @@ export abstract class BaseRoute implements RouteContract {
 
     abstract method: Method;
 
-    abstract handle(req: Request, res: Response): void;
+    abstract handle(req: Request): Promise<any> | any;
+
+    doHandle(req: Request): Promise<any> {
+        const response = this.handle(req);
+
+        if (response instanceof Promise) {
+            return response;
+        }
+
+        return new Promise((resolve) => {
+            resolve(response);
+        });
+    }
 }

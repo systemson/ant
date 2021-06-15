@@ -8,6 +8,7 @@ import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
 import LogProvider from "./providers/log_provider";
 import CacheProvider from "./providers/cache_provider";
+import { UserListRoute } from "./routes/users_list.route";
 
 export class Boostrap {
 
@@ -28,6 +29,7 @@ export class Boostrap {
     public routes:  (new() => RouteContract)[] = [
         HomeRoute,
         InfoRoute,
+        UserListRoute,
         // TestWorkerRoute,
     ];
 
