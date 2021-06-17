@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { QueueEngineFacade, WorkerContract } from "./queue";
 import { Response, RouteOptions, RouterConfig, RouteContract, ResponseContainer } from "./router";
 import { Job, Worker } from "bullmq";
-import { Express } from "express";
+import express, { Express } from "express";
 import { getEnv, logCatchedError, logCatchedException } from "./functions";
 
 export class App {
@@ -20,6 +20,8 @@ export class App {
 
     protected startHttpServer(): Promise<void> {
         return new Promise(() => {
+            this.router.use(express.json());
+
             this.router.listen(this.config.port, () => {
                 Logger.info(Lang.__("Http server is running at [{{scheme}}://{{host}}:{{port}}]", {
                     scheme: this.config.scheme || "http",
@@ -146,10 +148,10 @@ export class App {
             try {
                 this.bootProviders();
                 Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
+                this.startHttpServer().then().catch(logCatchedException);
         
                 this.setRoutes(this.boostrap.routes).then().catch(logCatchedException);
                 this.setWorkers(this.boostrap.workers).then().catch(logCatchedException);
-                this.startHttpServer().then().catch(logCatchedException);
                 
             } catch (error) {
                 rejects();
