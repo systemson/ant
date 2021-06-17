@@ -9,8 +9,8 @@ export default class LocaleProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise(() => {
             Lang.configure({
-                locales: ["en", "es"],
-                defaultLocale: getEnv("APP_LOCALE", "en"),
+                locales:  getEnv("APP_LOCALEs", "en,es").split(","),
+                defaultLocale: getEnv("APP_DEFAULT_LOCALE", "en"),
                 directory: path.join(process.cwd(), "assets", "lang"),
                 autoReload: true,
                 syncFiles: true,

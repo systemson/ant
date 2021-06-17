@@ -38,23 +38,31 @@ export class App {
                 for (const routeClass of routeClasses) {
                     const instance = new routeClass() as RouteContract;
 
-                    this.router[instance.method](instance.url, (req, res) => {
-                        instance.doHandle(req, new ResponseContainer()).then((response: Response) => {
-                            res.status(response.getStatus() || 200).send(response.getData());
-                        }, (error) => {
-                            res.status(500).send(error);
-                            logCatchedError(error);
-                        }).catch(logCatchedError);
-                    });
-
-                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", {
+                    const routeData = {
                         name: instance.constructor.name,
                         scheme: this.config.scheme || "http",
                         host: this.config.host || "localhost",
                         port: this.config.port,
                         endpoint: instance.url,
                         method: instance.method.toLocaleUpperCase(),
-                    }));
+                    };
+
+                    this.router[instance.method](instance.url, (req, res) => {
+                        instance.doHandle(req, new ResponseContainer()).then((response: Response) => {
+                            Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                            Logger.trace(JSON.stringify(req.body, null, 4));
+                            res.status(response.getStatus() || 200).send(response.getData());
+                        }, (error) => {
+                            res.status(500).send(error);
+                            Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                            logCatchedError(error);
+                        }).catch((error) => {
+                            Logger.error(Lang.__("Unhandled error on a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                            logCatchedError(error);
+                        });
+                    });
+
+                    Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", routeData));
                 }
                 Logger.audit(Lang.__("Routes set up completed."));
             } else {
