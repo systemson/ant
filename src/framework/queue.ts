@@ -66,7 +66,7 @@ export abstract class BaseWorker implements WorkerContract {
         return options;
     }
 
-    public dispatch(queueName: string, queuejob: string, data: unknown): void {
+    protected dispatch(queueName: string, queuejob: string, data: unknown): void {
         QueueEngineFacade.queue(queueName).add(queuejob, data);
     }
 }
