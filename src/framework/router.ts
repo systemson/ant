@@ -32,6 +32,9 @@ export interface Response {
 
     setStatus(code: number): Response;
     getStatus(): number;
+
+    setHeaders(headers: any): Response;
+    getHeaders(): any;
 }
 
 export type Request = ExpressRequest
@@ -40,6 +43,8 @@ export class ResponseContainer implements Response {
     protected content?: any;
 
     protected codeStatus = 200;
+
+    protected headers: any = {};
 
     setStatus(code: number): Response {
         this.codeStatus = code;
@@ -61,6 +66,23 @@ export class ResponseContainer implements Response {
         return this.content;
     }
 
+    setHeaders(headers: {
+        [key: string]: string;
+    }): Response {
+        this.headers = headers;
+
+        return this;
+    }
+
+    getHeaders(): {
+        [key: string]: string;
+        } {
+        return this.headers;
+    }
+}
+
+export function response(body: unknown, code = 200, headers = {}): Response {
+    return (new ResponseContainer()).setData(body).setStatus(code).setHeaders(headers);
 }
 
 export abstract class BaseRoute implements RouteContract {

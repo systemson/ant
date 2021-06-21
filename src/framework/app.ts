@@ -51,7 +51,7 @@ export class App {
                         instance.doHandle(req, new ResponseContainer()).then((response: Response) => {
                             Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                             Logger.trace(JSON.stringify(req.body, null, 4));
-                            res.status(response.getStatus() || 200).send(response.getData());
+                            res.status(response.getStatus()).header(response.getHeaders()).send(response.getData());
                         }, (error) => {
                             res.status(500).send(error);
                             Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
@@ -81,35 +81,54 @@ export class App {
 
                     QueueEngineFacade.bootQueue(queueName, {connection: instance.getOptions().connection});
 
-                    const concrete = new Worker(queueName, (job: Job) => instance.handler(job), instance.getOptions());
+                    const concrete = new Worker(
+                        queueName,
+                        (job: Job) => {
+                            Logger.debug(Lang.__("Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].", {
+                                name: instance.constructor.name,
+                                job: job.name,
+                                queue: queueName,
+                                id: job.id?.toString() as string,
+                            }));
+                            Logger.trace(JSON.stringify(job, null, 4));
+
+                            return instance.handler(job);
+                        },
+                        instance.getOptions()
+                    );
 
                     concrete.on("completed", (job: Job, returnValue: any) => {
-                        Logger.debug(Lang.__("Job [{{name}}#{{id}}] successfully completed. Returning: {{{return}}}.", {
-                            name: job.name,
+                        Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.", {
+                            name: instance.constructor.name,
+                            job: job.name,
+                            queue: queueName,
                             id: job.id?.toString() as string,
-                            return: JSON.stringify(returnValue, null, 4),
+                            data: JSON.stringify(returnValue, null, 4),
                         }));
                         Logger.trace(JSON.stringify(job, null, 4));
                     });
 
                     concrete.on("progress", (job: Job, progress: number | unknown) => {
-                        Logger.debug(JSON.stringify(job));
+                        Logger.debug(JSON.stringify(job, null, 4));
                         Logger.trace(JSON.stringify(progress));
                     });
 
                     concrete.on("failed", (job: Job, failedReason: string) => {
-                        Logger.error(Lang.__("Job [{{name}}#{{id}}] failed. {{reason}}.", {
-                            name: job.name,
+                        Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}]. {{data}}.", {
+                            name: instance.constructor.name,
+                            job: job.name,
+                            queue: queueName,
                             id: job.id?.toString() as string,
-                            reason: failedReason,
+                            data: failedReason,
                         }));
 
                         Logger.trace(JSON.stringify(job, null, 4));
                     });
 
                     concrete.on("drained", () => {
-                        Logger.audit(Lang.__("Queue [{{name}}] is empty.", {
-                            name: queueName,
+                        Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", {
+                            name: instance.constructor.name,
+                            queue: queueName,
                         }));
                     });
         

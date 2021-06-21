@@ -9,6 +9,8 @@ import { InfoRoute } from "./routes/info.route";
 import LogProvider from "./providers/log_provider";
 import CacheProvider from "./providers/cache_provider";
 import { UserListRoute } from "./routes/users_list.route";
+import { TestWorker } from "./workers/test.worker";
+import { TestWorkerRoute } from "./routes/test_worker.route";
 
 export class Boostrap {
 
@@ -30,13 +32,13 @@ export class Boostrap {
         HomeRoute,
         InfoRoute,
         UserListRoute,
-        // TestWorkerRoute,
+        TestWorkerRoute,
     ];
 
     /**
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        // TestWorker
+        TestWorker
     ];
 }
