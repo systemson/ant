@@ -1,5 +1,5 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
-import { getEnv } from "./functions";
+import { getEnv } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 
 /**

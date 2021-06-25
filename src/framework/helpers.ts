@@ -20,3 +20,10 @@ export function logCatchedError(error?: {message?: string; stack?: string;}): vo
     Logger.error(error?.message || "");
     Logger.trace(error?.stack || "");
 }
+
+import { DateTime } from "luxon";
+export function now(): DateTime {
+    return DateTime.now();
+}
+
+export const TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";

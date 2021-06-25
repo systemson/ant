@@ -1,7 +1,7 @@
 import { MikroORM, NamingStrategy, ReflectMetadataProvider } from "@mikro-orm/core";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { ServiceProvider } from "../framework/service_provider";
-import { getEnv, logCatchedException } from "../framework/functions";
+import { getEnv, logCatchedException } from "../framework/helpers";
 import { OrmFacade } from "../framework/orm_facade";
 import { Logger } from "../framework/logger";
 import { Lang } from "../framework/lang";

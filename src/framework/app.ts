@@ -5,7 +5,7 @@ import { QueueEngineFacade, WorkerContract } from "./queue";
 import { Response, RouteOptions, RouterConfig, RouteContract, ResponseContainer } from "./router";
 import { Job, Worker } from "bullmq";
 import express, { Express } from "express";
-import { getEnv, logCatchedError, logCatchedException } from "./functions";
+import { getEnv, logCatchedError, logCatchedException } from "./helpers";
 
 export class App {
     routes: Map<string, RouteOptions> = new Map();

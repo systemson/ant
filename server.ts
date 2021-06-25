@@ -1,5 +1,5 @@
 import express from "express";
-import { getEnv, logCatchedException } from "./src/framework/functions";
+import { getEnv, logCatchedException } from "./src/framework/helpers";
 import { App } from "./src/framework/app";
 import { Boostrap } from "./src/bootstrap";
 

@@ -1,6 +1,6 @@
 import { BaseRoute, Method, Request, Response } from "../framework/router";
 import { Lang } from "../framework/lang";
-import { getEnv } from "../framework/functions";
+import { getEnv } from "../framework/helpers";
 
 export class HomeRoute extends BaseRoute {
     url = "/";

@@ -1,5 +1,5 @@
 import { ServiceProvider } from "../framework/service_provider";
-import { getEnv } from "../framework/functions";
+import { getEnv } from "../framework/helpers";
 import IORedis from "ioredis";
 import { CacheFacade, RedisChacheDriver } from "../framework/cache";
 

@@ -22,19 +22,20 @@
     "@mikro-orm/postgresql": "^4.5.6",
     "@mikro-orm/reflection": "^4.5.6",
     "@types/ioredis": "^4.26.4",
-    "@types/redis": "^2.8.29",
+    "@types/redis": "^2.8.30",
     "axios": "^0.21.1",
     "bullmq": "^1.36.1",
     "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "i18n": "^0.13.3",
     "ioredis": "^4.27.6",
-    "moment": "^2.29.1"
+    "luxon": "^1.27.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.12",
     "@types/i18n": "^0.13.0",
-    "@types/node": "^14.17.3",
+    "@types/luxon": "^1.27.0",
+    "@types/node": "^14.17.4",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",

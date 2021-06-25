@@ -1,5 +1,5 @@
 import { ServiceProvider } from "../framework/service_provider";
-import { getEnv } from "../framework/functions";
+import { getEnv } from "../framework/helpers";
 import { ConsoleLogger, FileLogger, Logger } from "../framework/logger";
 
 export default class LogProvider extends ServiceProvider {

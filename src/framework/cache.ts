@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { logCatchedError } from "./functions";
+import { logCatchedError } from "./helpers";
 
 export interface CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void>;
