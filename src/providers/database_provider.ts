@@ -63,6 +63,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 port: parseInt(getEnv("DB_PORT", "5432")),
                 user: getEnv("DB_USERNAME", "postgres"),
                 password:  getEnv("DB_PASSWORD", "postgres"),
+                forceUtcTimezone: true,
                 metadataProvider: getEnv("APP_MODE", "production") === "production" ? ReflectMetadataProvider : TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
                 cache: {
