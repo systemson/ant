@@ -57,7 +57,7 @@
       "temp/*"
     ],
     "verbose": true,
-    "delay": 2500,
+    "delay": 100,
     "ext": "ts"
   }
 }

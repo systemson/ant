@@ -8,9 +8,9 @@ export class TestWorkerRoute extends BaseRoute {
     method: Method = "get";
 
     async handle(req: Request, res: Response): Promise<Response> {
-        const job = "queue_test";
+        const job = "queue_test/:status";
 
-        const status = req.query.status;
+        const status = req.params.status;
 
         // Adds a job to the queue
         await QueueEngineFacade.add(job, {name: status});

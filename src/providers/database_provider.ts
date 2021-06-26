@@ -56,7 +56,7 @@ export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise(() => {
             MikroORM.init({
-                entities: getEnv("APP_MODE", "production") === "production" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
+                entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
                 type: getEnv("DB_TYPE") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
                 dbName: getEnv("DB_DATABASE"),
                 host: getEnv("DB_HOST", "localhost"),
@@ -64,7 +64,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 user: getEnv("DB_USERNAME", "postgres"),
                 password:  getEnv("DB_PASSWORD", "postgres"),
                 forceUtcTimezone: true,
-                metadataProvider: getEnv("APP_MODE", "production") === "production" ? ReflectMetadataProvider : TsMorphMetadataProvider,
+                metadataProvider: getEnv("APP_MODE", "develop") === "compiled" ? ReflectMetadataProvider : TsMorphMetadataProvider,
                 namingStrategy: CustomNamingStrategy,
                 cache: {
                     pretty: true,
