@@ -57,7 +57,7 @@ export default class DatabaseProvider extends ServiceProvider {
         return new Promise(() => {
             MikroORM.init({
                 entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
-                type: getEnv("DB_TYPE") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite" | undefined,
+                type: getEnv("DB_TYPE", "postgresql") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite",
                 dbName: getEnv("DB_DATABASE"),
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
