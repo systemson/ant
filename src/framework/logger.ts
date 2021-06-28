@@ -91,7 +91,6 @@ export class Logger {
 
                 resolve();
             } else {
-                console.log("Waiting", Logger.isReady);
                 setTimeout(() => Logger.doLog(date, level, msg), 100);
             }
         });
