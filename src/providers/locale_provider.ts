@@ -7,7 +7,7 @@ export default class LocaleProvider extends ServiceProvider {
     protected logDir = getEnv("APP_FILE_LOG_DIR");
 
     boot(): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve) => {
             Lang.configure({
                 locales:  getEnv("APP_LOCALEs", "en,es").split(","),
                 defaultLocale: getEnv("APP_DEFAULT_LOCALE", "en"),
@@ -15,6 +15,8 @@ export default class LocaleProvider extends ServiceProvider {
                 autoReload: true,
                 syncFiles: true,
             });
+
+            resolve();
         });
     }
 }

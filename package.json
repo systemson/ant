@@ -13,7 +13,8 @@
     "build": "tsc --project ./ && nexe ./build/**/* -o ./app.exe --verbose",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
-    "test": "nyc --reporter=html mocha"
+    "test": "mocha",
+    "coverage": "nyc --reporter=html npm run test"
   },
   "author": "",
   "license": "GPL-3.0-or-later",

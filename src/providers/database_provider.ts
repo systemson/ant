@@ -54,7 +54,7 @@ class CustomNamingStrategy implements NamingStrategy {
 
 export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve, reject) => {
             MikroORM.init({
                 entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
                 type: getEnv("DB_TYPE", "postgresql") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite",
@@ -73,11 +73,13 @@ export default class DatabaseProvider extends ServiceProvider {
                     }
                 },
             }).then((orm) => {
+                resolve();
+
                 OrmFacade.orm = orm;
                 Logger.audit(Lang.__("ORM [{{name}}] started.", {
                     name: orm.constructor.name,
                 }));
-            }).catch(logCatchedException);
+            }, reject).catch(logCatchedException);
         });
     }
 }

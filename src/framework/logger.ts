@@ -1,4 +1,4 @@
-import { getEnv, timestamp, today } from "./helpers";
+import { getEnv, logCatchedException, timestamp, today } from "./helpers";
 import fs from "fs";
 import { EOL } from "os";
 
@@ -68,22 +68,33 @@ export class Logger {
         number: 6
     }
 
+    static isReady = false;
+
     static log(level: LOG_LEVEL, msg: string): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve) => {
             if (parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number) {
-                this.doLog(timestamp(), level.name.toUpperCase(), msg);
+                Logger.doLog(timestamp(), level.name.toUpperCase(), msg).then(() => {
+                    resolve();
+                }).catch(logCatchedException);
             }
         });
     }
 
-    protected static doLog(date: string, level: string, msg: string): void {
-        const logLevel = level.padEnd(5, " ");
+    protected static doLog(date: string, level: string, msg: string): Promise<void> {
+        return new Promise((resolve) => {
+            if (Logger.isReady) {
+                for (const instance of Logger.instances) {
+                    if (instance.can) {
+                        instance.driver.log(`[${date}] | ${level.padEnd(5, " ")} | ${msg}`);
+                    }
+                }
 
-        for (const instance of this.instances) {
-            if (instance.can) {
-                instance.driver.log(`[${date}] | ${logLevel} | ${msg}`);
+                resolve();
+            } else {
+                console.log("Waiting", Logger.isReady);
+                setTimeout(() => Logger.doLog(date, level, msg), 100);
             }
-        }
+        });
     }
 
     static fatal(msg: string): Promise<void>  {

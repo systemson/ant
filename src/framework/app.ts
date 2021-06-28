@@ -35,6 +35,8 @@ export class App {
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<void> {
         return new Promise(() => {
             if (routeClasses.length > 0) {
+                Logger.audit(Lang.__("Routes set up started."));
+
                 for (const routeClass of routeClasses) {
                     const instance = new routeClass() as RouteContract;
 
@@ -87,6 +89,8 @@ export class App {
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<void> {
         return new Promise(() => {
             if (workerClasses.length > 0) {
+                Logger.audit(Lang.__("Workers set up started."));
+
                 for (const workerClass of workerClasses) {
                     const instance = new workerClass();
 
@@ -158,19 +162,26 @@ export class App {
         });
     }
 
-    protected bootProviders(): Promise<void> {
-        return new Promise(() => {
-            for (const providerClass of this.boostrap.providers) {
-                const provider = new providerClass();
-                provider.init().then((data) => {
-                    Logger.audit(Lang.__("Booting service provider [{{name}}]", {
-                        name: data.name,
-                    }));
-                }).catch(logCatchedException);
-            }
-        });
+    protected async bootProviders(): Promise<void> {
+        Logger.audit("Service providers booting started.");
+
+        const promises: Promise<any>[] = [];
+
+        for (const providerClass of this.boostrap.providers) {
+            const provider = new providerClass();
+
+            promises.push(provider.init().then((data) => {
+                Logger.audit(Lang.__("Booting service provider [{{name}}]", {
+                    name: data.name,
+                }));
+            }));
+        }
+
+        await Promise.all(promises);
+        Logger.audit(Lang.__("Service providers booting completed."));
     }
-    
+
+
 
     /**
      * Prepares the application.
@@ -181,20 +192,21 @@ export class App {
     
 
     /**
-     * Sets ready the application.
+     * Sets ready the application's components.
      */
     public boot(): Promise<void> {
         return new Promise((resolve, rejects) => {
             try {
-                this.bootProviders();
-                Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
-                this.startHttpServer().then().catch(logCatchedException);
-        
-                this.setRoutes(this.boostrap.routes).then().catch(logCatchedException);
-                this.setWorkers(this.boostrap.workers).then().catch(logCatchedException);
+                this.bootProviders().then(() => {
+                    Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
+                    this.startHttpServer().catch(logCatchedException);
+            
+                    this.setRoutes(this.boostrap.routes).catch(logCatchedException);
+                    this.setWorkers(this.boostrap.workers).catch(logCatchedException);
+                });
                 
             } catch (error) {
-                rejects();
+                rejects(error);
             }
             resolve();
         });
