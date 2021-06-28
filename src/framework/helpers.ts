@@ -33,6 +33,12 @@ export function dateFormated(format: TIME_FORMAT): string {
 export function timestamp(): string {
     return dateFormated(TIMESTAMP_FORMAT);
 }
+export function today(): string {
+    return dateFormated(DATE_FORMAT);
+}
+export function time(): string {
+    return dateFormated(HOUR_FORMAT);
+}
 
 export type TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS" | "yyyy-MM-dd HH:mm:ss.SSS" | "yyyy-MM-dd HH:mm:ss" |"yyyyMMddHHmmss" | "yyyy-MM-dd" | "yyyy/MM/dd" | "HH:mm:ss" | "HH:mm:ss.SSS" | "HHmmss" | "HHmmssSSS";
 

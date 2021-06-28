@@ -21,9 +21,9 @@ export interface RouteContract {
     url: string;
     method: Method;
 
-    handle(req: Request, res: Response): Promise<Response> | Response;
+    handle(req: Request): Promise<Response> | Response;
     
-    doHandle(req: Request, res: Response): Promise<Response>;
+    doHandle(req: Request): Promise<Response>;
 }
 
 export interface Response {
@@ -90,10 +90,10 @@ export abstract class BaseRoute implements RouteContract {
 
     abstract method: Method;
 
-    abstract handle(req: Request, res: Response): Promise<Response> | Response;
+    abstract handle(req: Request): Promise<Response> | Response;
 
-    doHandle(req: Request, res: Response): Promise<Response> {
-        const response = this.handle(req, res);
+    doHandle(req: Request): Promise<Response> {
+        const response = this.handle(req);
 
         if (response instanceof Promise) {
             return response;

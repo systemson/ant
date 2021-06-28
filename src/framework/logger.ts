@@ -1,6 +1,5 @@
-import { getEnv } from "./helpers";
+import { getEnv, timestamp, today } from "./helpers";
 import fs from "fs";
-import moment from "moment";
 import { EOL } from "os";
 
 type LOG_LEVEL = {
@@ -30,7 +29,7 @@ export class FileLogger implements LogDriverContract {
 
     log(msg: string): Promise<void>  {
         return new Promise(() => {
-            const fileName = `${this.name.toLowerCase()}-${moment().format(this.dateFormat)}.log`;
+            const fileName = `${this.name.toLowerCase()}-${today()}.log`;
 
             fs.appendFileSync(`${this.folder}/${fileName}`, msg + EOL);
         });
@@ -71,8 +70,8 @@ export class Logger {
 
     static log(level: LOG_LEVEL, msg: string): Promise<void> {
         return new Promise(() => {
-            if ( parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number ) {
-                this.doLog(moment().format("YYYY-MM-DDTHH:mm:ss.SSS"), level.name.toUpperCase(), msg);
+            if (parseInt(getEnv("APP_LOG_LEVEL", "3")) >= level.number) {
+                this.doLog(timestamp(), level.name.toUpperCase(), msg);
             }
         });
     }

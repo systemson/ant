@@ -2,7 +2,7 @@ import { Boostrap } from "../bootstrap";
 import { Lang } from "../framework/lang";
 import { Logger } from "./logger";
 import { QueueEngineFacade, WorkerContract } from "./queue";
-import { Response, RouteOptions, RouterConfig, RouteContract, ResponseContainer } from "./router";
+import { Response, RouteOptions, RouterConfig, RouteContract } from "./router";
 import { Job, Worker } from "bullmq";
 import express, { Express } from "express";
 import { getEnv, logCatchedError, logCatchedException } from "./helpers";
@@ -48,18 +48,31 @@ export class App {
                     };
 
                     this.router[instance.method](instance.url, (req, res) => {
-                        instance.doHandle(req, new ResponseContainer()).then((response: Response) => {
-                            Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
-                            Logger.trace(JSON.stringify(req.body, null, 4));
-                            res.status(response.getStatus()).header(response.getHeaders()).send(response.getData());
-                        }, (error) => {
-                            res.status(500).send(error);
-                            Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
-                            logCatchedError(error);
-                        }).catch((error) => {
-                            Logger.error(Lang.__("Unhandled error on a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
-                            logCatchedError(error);
-                        });
+                        instance.doHandle(req)
+                            .then((response: Response) => {
+                                res.status(response.getStatus()).header(response.getHeaders()).send(response.getData());
+
+                                Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                                Logger.trace(JSON.stringify({
+                                    url: req.url,
+                                    method: req.method,
+                                    clientIp: req.ip,
+                                    body: req.body,
+                                    query: req.query,
+                                    params: req.params,
+                                }, null, 4));
+                            }, (error) => {
+                                res.status(500).send(error);
+
+                                Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                                logCatchedError(error);
+                            }
+                            ).catch((error) => {
+                                res.status(500).send(error);
+
+                                Logger.error(Lang.__("Unhandled error on a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                                logCatchedError(error);
+                            });
                     });
 
                     Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", routeData));
