@@ -33,8 +33,10 @@ export class App {
     }
 
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (routeClasses.length > 0) {
+                await this.startHttpServer().catch(logCatchedException);
+
                 Logger.audit(Lang.__("Routes set up started."));
 
                 for (const routeClass of routeClasses) {
@@ -225,9 +227,7 @@ export class App {
                     Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
 
                     this.setRoutes(this.boostrap.routes)
-                        .then(() => {
-                            this.startHttpServer().catch(logCatchedException);
-                        }, dummyCallback)
+                        .then(dummyCallback, dummyCallback)
                         .catch(logCatchedException)
                     ;
 
