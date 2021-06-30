@@ -19,7 +19,7 @@ export class App {
     }
 
     protected startHttpServer(): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve) => {
             this.router.use(express.json());
 
             this.router.listen(this.config.port, () => {
@@ -29,6 +29,8 @@ export class App {
                     port: this.config.port,
                 }));
             });
+
+            resolve();
         });
     }
 
