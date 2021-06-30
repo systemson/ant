@@ -3,12 +3,12 @@ import { Lang } from "../framework/lang";
 import { QueueEngineFacade } from "../framework/queue";
 
 export class TestWorkerRoute extends BaseRoute {
-    url = "/test";
+    url = "/test/:status";
 
     method: Method = "get";
 
     async handle(req: Request): Promise<Response> {
-        const job = "queue_test/:status";
+        const job = "queue_test";
 
         const status = req.params.status;
 

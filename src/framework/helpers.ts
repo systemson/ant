@@ -17,11 +17,12 @@ export function logCatchedException(error?: {message?: string; stack?: string;})
     process.exit();
 }
 export function logCatchedError(error?: {message?: string; stack?: string;}): void {
-    Logger.error(error?.message || "");
-    Logger.trace(error?.stack || "");
+    Logger.error(error?.message || Lang.__("No message provided for this error."));
+    Logger.trace(error?.stack || Lang.__("No trace stack provided for this error."));
 }
 
 import { DateTime } from "luxon";
+import { Lang } from "./lang";
 export function now(): DateTime {
     return DateTime.now();
 }
@@ -45,6 +46,6 @@ export const DATE_FORMAT: TIME_FORMAT = "yyyy-MM-dd";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
 
 
-export function dummyCallback(): void {
+export function dummyCallback(...any: unknown[]): void {
     //
 }

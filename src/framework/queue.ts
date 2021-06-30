@@ -1,5 +1,5 @@
 import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
-import { getEnv } from "./helpers";
+import { dummyCallback, getEnv } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 
 /**
@@ -27,6 +27,14 @@ export interface WorkerContract {
      * @param job The job to process
      */
     handler(job: Job): any;
+
+    /**
+     * Handles the failed job.
+     * 
+     * @param job The job to process
+     * @param failedReason
+     */
+    handleFailed(job: Job, failedReason: string): void
 }
 
 export abstract class BaseWorker implements WorkerContract {
@@ -66,8 +74,12 @@ export abstract class BaseWorker implements WorkerContract {
         return options;
     }
 
-    protected dispatch(queueName: string, queuejob: string, data: unknown): void {
-        QueueEngineFacade.queue(queueName).add(queuejob, data);
+    protected dispatch(queueName: string, queuejob: string, data: unknown): Promise<unknown> {
+        return QueueEngineFacade.queue(queueName).add(queuejob, data);
+    }
+
+    public handleFailed(job: Job, failedReason: string): void {
+        dummyCallback(job, failedReason);
     }
 }
 
@@ -100,7 +112,7 @@ export class QueueEngineFacade {
     public static add(jobName: string, data: unknown): Promise<unknown> {
         return QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
             removeOnComplete: true,
-            attempts: parseInt(getEnv("APP_QUEUE_RETRIES")),
+            attempts: parseInt(getEnv("APP_QUEUE_RETRIES", "3")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
         });
     }

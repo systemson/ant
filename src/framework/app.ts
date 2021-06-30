@@ -48,6 +48,8 @@ export class App {
                         endpoint: instance.url,
                         method: instance.method.toLocaleUpperCase(),
                     };
+                    Logger.audit(Lang.__("Preparing route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+
 
                     this.router[instance.method](instance.url, (req, res) => {
                         instance.doHandle(req)
@@ -62,6 +64,7 @@ export class App {
                                     body: req.body,
                                     query: req.query,
                                     params: req.params,
+                                    headers: req.headers,
                                 }, null, 4));
                             }, (error) => {
                                 res.status(500).send(error);
@@ -93,7 +96,7 @@ export class App {
     }
 
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
                 Logger.audit(Lang.__("Workers set up started."));
 
@@ -101,6 +104,11 @@ export class App {
                     const instance = new workerClass();
 
                     const queueName = instance.getQueueName();
+        
+                    Logger.audit(Lang.__("Preparing worker [{{name}}:{{queue}}].", {
+                        name: instance.constructor.name,
+                        queue: queueName,
+                    }));
 
                     QueueEngineFacade.bootQueue(queueName, {connection: instance.getOptions().connection});
 
@@ -146,7 +154,11 @@ export class App {
                         }));
 
                         Logger.trace(JSON.stringify(job, null, 4));
+
+                        instance.handleFailed(job, failedReason);
                     });
+
+                    concrete.on("error", logCatchedError);
 
                     concrete.on("drained", () => {
                         Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", {
@@ -162,8 +174,14 @@ export class App {
                 }
 
                 Logger.audit(Lang.__("Workers set up completed."));
+                resolve();
             } else {
-                Logger.audit(Lang.__("No workers found."));
+                const message = "No workers found.";
+                Logger.audit(Lang.__(message));
+
+                reject({
+                    message: message,
+                });
             }
         });
     }
@@ -212,9 +230,13 @@ export class App {
                         }, dummyCallback)
                         .catch(logCatchedException)
                     ;
-                    this.setWorkers(this.boostrap.workers).catch(logCatchedException);
+
+                    this.setWorkers(this.boostrap.workers)
+                        //.then(dummyCallback, dummyCallback)
+                        .catch(logCatchedException)
+                    ;
                 });
-                
+
             } catch (error) {
                 rejects(error);
             }
