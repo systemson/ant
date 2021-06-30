@@ -232,7 +232,7 @@ export class App {
                     ;
 
                     this.setWorkers(this.boostrap.workers)
-                        //.then(dummyCallback, dummyCallback)
+                        .then(dummyCallback, dummyCallback)
                         .catch(logCatchedException)
                     ;
                 });
