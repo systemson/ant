@@ -1,4 +1,4 @@
-import { Redis } from "ioredis";
+import IORedis, { Redis } from "ioredis";
 import { logCatchedError } from "./helpers";
 
 export interface CacheDriverContract {
@@ -8,16 +8,34 @@ export interface CacheDriverContract {
     unset(key: string): Promise<void>;
 }
 
+export type RedisConfigContract = {
+    port: number;
+    host: string;
+    password: string;
+}
+
 export class RedisChacheDriver implements CacheDriverContract {
-    constructor(protected client: Redis) { }
+    private client!: Redis;
+
+    constructor(protected config: RedisConfigContract) { }
+
+    private initRedis() {
+        if (this.client === undefined) {
+            this.client = new IORedis(this.config.port, this.config.host, {
+                password: this.config.password
+            });
+        }
+    }
 
     set(key: string, value: unknown, ttl?: number): Promise<void> {
+        this.initRedis();
         return new Promise((resolve, reject) => {
             this.client.set(key, value as any, "ex", ttl).then(() => resolve(), reject);
         });
     }
 
     has(key: string): Promise<boolean> {
+        this.initRedis();
         return new Promise((resolve: CallableFunction, reject: any) => {
             this.client.exists(key).then((value: number) => {
                 resolve(value > 0);
@@ -26,6 +44,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     }
 
     get(key: string, def?: unknown): Promise<any> {
+        this.initRedis();
         return new Promise((resolve, reject) => {
             this.client.get(key).then((value: unknown) => {
                 if (value) {
@@ -38,6 +57,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     }
 
     unset(key: string): Promise<void> {
+        this.initRedis();
         return new Promise((resolve, reject) => {
             this.client.del(key).then(() => {
                 resolve();

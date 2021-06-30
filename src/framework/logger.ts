@@ -1,4 +1,4 @@
-import { getEnv, logCatchedException, timestamp, today } from "./helpers";
+import { getEnv, logCatchedError, logCatchedException, timestamp, today } from "./helpers";
 import fs from "fs";
 import { EOL } from "os";
 
@@ -85,11 +85,13 @@ export class Logger {
             if (Logger.isReady) {
                 for (const instance of Logger.instances) {
                     if (instance.can) {
-                        instance.driver.log(`[${date}] | ${level.padEnd(5, " ")} | ${msg}`);
+                        instance.driver
+                            .log(`[${date}] | ${level.padEnd(5, " ")} | ${msg}`)
+                            .then(resolve)
+                            .catch(logCatchedError)
+                        ;
                     }
                 }
-
-                resolve();
             } else {
                 setTimeout(() => Logger.doLog(date, level, msg), 100);
             }

@@ -25,11 +25,9 @@ import { DateTime } from "luxon";
 export function now(): DateTime {
     return DateTime.now();
 }
-
 export function dateFormated(format: TIME_FORMAT): string {
     return DateTime.now().toFormat(format);
 }
-
 export function timestamp(): string {
     return dateFormated(TIMESTAMP_FORMAT);
 }
@@ -45,3 +43,8 @@ export type TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS" | "yyyy-MM-dd HH:mm:ss.SSS
 export const TIMESTAMP_FORMAT: TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 export const DATE_FORMAT: TIME_FORMAT = "yyyy-MM-dd";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
+
+
+export function dummyCallback(): void {
+    //
+}

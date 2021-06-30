@@ -5,7 +5,7 @@ import { QueueEngineFacade, WorkerContract } from "./queue";
 import { Response, RouteOptions, RouterConfig, RouteContract } from "./router";
 import { Job, Worker } from "bullmq";
 import express, { Express } from "express";
-import { getEnv, logCatchedError, logCatchedException } from "./helpers";
+import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
 
 export class App {
     routes: Map<string, RouteOptions> = new Map();
@@ -33,7 +33,7 @@ export class App {
     }
 
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<void> {
-        return new Promise(() => {
+        return new Promise((resolve, reject) => {
             if (routeClasses.length > 0) {
                 Logger.audit(Lang.__("Routes set up started."));
 
@@ -80,8 +80,14 @@ export class App {
                     Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", routeData));
                 }
                 Logger.audit(Lang.__("Routes set up completed."));
+                resolve();
             } else {
-                Logger.audit(Lang.__("No routes found."));
+                const message = "No routes found.";
+
+                Logger.audit(Lang.__(message));
+                reject({
+                    message: message,
+                });
             }
         });
     }
@@ -199,9 +205,13 @@ export class App {
             try {
                 this.bootProviders().then(() => {
                     Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
-                    this.startHttpServer().catch(logCatchedException);
-            
-                    this.setRoutes(this.boostrap.routes).catch(logCatchedException);
+
+                    this.setRoutes(this.boostrap.routes)
+                        .then(() => {
+                            this.startHttpServer().catch(logCatchedException);
+                        }, dummyCallback)
+                        .catch(logCatchedException)
+                    ;
                     this.setWorkers(this.boostrap.workers).catch(logCatchedException);
                 });
                 
