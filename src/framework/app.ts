@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { QueueEngineFacade, WorkerContract } from "./queue";
 import { Response, RouteOptions, RouterConfig, RouteContract } from "./router";
 import { Job, Worker } from "bullmq";
-import express, { Express } from "express";
+import express, { Express, Response as ExpressResponse, Request as ExpressRequest } from "express";
 import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
 
 export class App {
@@ -55,28 +55,34 @@ export class App {
                     Logger.audit(Lang.__("Preparing route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
 
 
-                    this.router[instance.method](instance.url, (req, res) => {
+                    this.router[instance.method](instance.url, (req: ExpressRequest, res: ExpressResponse) => {
+                        Logger.debug(Lang.__("Request received in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
+                        Logger.trace(Lang.__("Client request: ") + JSON.stringify({
+                            url: req.url,
+                            method: req.method,
+                            clientIp: req.ip,
+                            body: req.body,
+                            query: req.query,
+                            params: req.params,
+                            headers: req.headers,
+                        }, null, 4));
+
                         instance.doHandle(req)
-                            .then((response: Response) => {
-                                res.status(response.getStatus()).header(response.getHeaders()).send(response.getData());
+                            .then((handler: Response) => {
+                                handler.fill(res).send();
 
                                 Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
-                                Logger.trace(JSON.stringify({
-                                    url: req.url,
-                                    method: req.method,
-                                    clientIp: req.ip,
-                                    body: req.body,
-                                    query: req.query,
-                                    params: req.params,
-                                    headers: req.headers,
-                                }, null, 4));
+                                Logger.trace(Lang.__("Server response: ") + JSON.stringify(handler.getData(), null, 4));
+
+                                instance.onCompleted(req);
                             }, (error) => {
                                 res.status(500).send(error);
 
                                 Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                                 logCatchedError(error);
-                            }
-                            ).catch((error) => {
+
+                                instance.onFailed(req);
+                            }).catch((error) => {
                                 res.status(500).send(error);
 
                                 Logger.error(Lang.__("Unhandled error on a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));

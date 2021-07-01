@@ -1,4 +1,5 @@
-import { Request as ExpressRequest, RequestHandler } from "express";
+import { AxiosResponse } from "axios";
+import { Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from "express";
 
 export type RouterConfig = {
     scheme?: string;
@@ -24,6 +25,9 @@ export interface RouteContract {
     handle(req: Request): Promise<Response> | Response;
     
     doHandle(req: Request): Promise<Response>;
+
+    onCompleted(req: Request): void;
+    onFailed(req: Request, error?: unknown): void;
 }
 
 export interface Response {
@@ -35,6 +39,8 @@ export interface Response {
 
     setHeaders(headers: any): Response;
     getHeaders(): any;
+
+    fill(ressponse: ExpressResponse): ExpressResponse;
 }
 
 export type Request = ExpressRequest
@@ -79,6 +85,14 @@ export class ResponseContainer implements Response {
         } {
         return this.headers;
     }
+
+    fill(response: ExpressResponse): ExpressResponse {
+        return response
+            .status(this.getStatus())
+            .header(this.getHeaders())
+            .json(this.getData())
+        ;
+    }
 }
 
 export function response(body: unknown, code = 200, headers = {}): Response {
@@ -102,5 +116,13 @@ export abstract class BaseRoute implements RouteContract {
         return new Promise((resolve) => {
             resolve(response as Response);
         });
+    }
+
+    onCompleted(req: Request): void {
+        //
+    }
+
+    onFailed(req: Request, error?: unknown): void {
+        //
     }
 }
