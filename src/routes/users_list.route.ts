@@ -1,5 +1,4 @@
 import { BaseRoute, Method, response, Response } from "../framework/router";
-import { OrmFacade } from "../framework/orm_facade";
 import { User } from "../models/user";
 
 export class UserListRoute extends BaseRoute {
@@ -8,7 +7,7 @@ export class UserListRoute extends BaseRoute {
     method: Method = "get";
 
     async handle(): Promise<Response> {
-        const body = await OrmFacade.em.getRepository(User).findAll();
+        const body = await User.find();
 
         return response(body);
     } 

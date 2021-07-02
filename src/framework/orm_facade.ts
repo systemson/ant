@@ -1,17 +1,18 @@
-import { Connection, EntityManager, IDatabaseDriver, MikroORM } from "@mikro-orm/core";
+import { Connection } from "typeorm";
 
 export class OrmFacade {
-    protected static ormInstance: MikroORM<IDatabaseDriver<Connection>>;
+    protected static ormInstance: Connection;
 
-    public static set orm(orm: MikroORM<IDatabaseDriver<Connection>>) {
+    public static set orm(orm: Connection) {
         this.ormInstance = orm;
     }
 
-    public static get orm():  MikroORM<IDatabaseDriver<Connection>> {
+    public static get orm():  Connection {
         return this.ormInstance;
     }
 
-    public static get em(): EntityManager<IDatabaseDriver<Connection>> {
-        return this.ormInstance.em.fork();
+    public static get em(): any {
+        //return this.ormInstance.em.fork();
+        return;
     }
 }

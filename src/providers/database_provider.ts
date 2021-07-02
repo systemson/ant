@@ -1,11 +1,10 @@
-import { MikroORM, NamingStrategy, ReflectMetadataProvider } from "@mikro-orm/core";
-import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { ServiceProvider } from "../framework/service_provider";
 import { getEnv, logCatchedException } from "../framework/helpers";
 import { OrmFacade } from "../framework/orm_facade";
 import { Logger } from "../framework/logger";
 import { Lang } from "../framework/lang";
-
+import { createConnection } from "typeorm";
+/*
 class CustomNamingStrategy implements NamingStrategy {
     getClassName(file: string): string {
         return this.snakeCaseToCamelCase(file);
@@ -51,33 +50,29 @@ class CustomNamingStrategy implements NamingStrategy {
         return userOutPut;
     }
 }
-
+*/
 export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise((resolve, reject) => {
-            MikroORM.init({
-                entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
-                type: getEnv("DB_TYPE", "postgresql") as "mongo" | "mysql" | "mariadb" | "postgresql" | "sqlite",
-                dbName: getEnv("DB_DATABASE"),
+            createConnection({
+                type: getEnv("DB_TYPE", "postgresql") as any,
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
-                user: getEnv("DB_USERNAME", "postgres"),
-                password:  getEnv("DB_PASSWORD", "postgres"),
-                strict: true,
-                metadataProvider: getEnv("APP_MODE", "develop") === "compiled" ? ReflectMetadataProvider : TsMorphMetadataProvider,
-                namingStrategy: CustomNamingStrategy,
-                cache: {
-                    pretty: true,
-                    options: {
-                        cacheDir: "./build/tmp"
-                    }
-                },
-            }).then((orm) => {
+                username: getEnv("DB_USERNAME", "postgres"),
+                password: getEnv("DB_PASSWORD", "postgres"),
+                database: getEnv("DB_DATABASE"),
+                schema:  getEnv("DB_SCHEMA", "public"),
+                entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
+                //entities: ['./src/models/*.ts'],
+                entityPrefix: getEnv("BD_PREFIX"),
+                synchronize: true,
+                dropSchema: true,
+            }).then((connection) => {
                 resolve();
 
-                OrmFacade.orm = orm;
+                OrmFacade.orm = connection;
                 Logger.audit(Lang.__("ORM [{{name}}] started.", {
-                    name: orm.constructor.name,
+                    name: connection.constructor.name,
                 }));
             }, reject).catch(logCatchedException);
         });

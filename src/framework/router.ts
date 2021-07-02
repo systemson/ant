@@ -1,4 +1,3 @@
-import { AxiosResponse } from "axios";
 import { Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from "express";
 
 export type RouterConfig = {

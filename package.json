@@ -19,18 +19,18 @@
   "author": "",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@mikro-orm/core": "^4.5.6",
-    "@mikro-orm/postgresql": "^4.5.6",
-    "@mikro-orm/reflection": "^4.5.6",
     "@types/ioredis": "^4.26.4",
     "@types/redis": "^2.8.30",
     "axios": "^0.21.1",
-    "bullmq": "^1.36.1",
+    "bullmq": "^1.37.1",
     "dotenv": "^8.6.0",
     "express": "^4.17.1",
     "i18n": "^0.13.3",
     "ioredis": "^4.27.6",
-    "luxon": "^1.27.0"
+    "luxon": "^1.27.0",
+    "pg": "^8.6.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.2.34"
   },
   "devDependencies": {
     "@types/chai": "^4.2.19",
@@ -46,10 +46,10 @@
     "faker": "^5.5.3",
     "mocha": "^9.0.1",
     "nexe": "^4.0.0-beta.18",
-    "nodemon": "^2.0.8",
+    "nodemon": "^2.0.9",
     "nyc": "^15.1.0",
     "ts-node": "^10.0.0",
-    "typescript": "^4.3.4"
+    "typescript": "^4.3.5"
   },
   "nodemonConfig": {
     "watch": [

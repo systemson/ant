@@ -1,16 +1,17 @@
-import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Model } from "./model";
 
 @Entity()
-export class User {
-    @PrimaryKey()
+export class User extends Model  {
+    @PrimaryGeneratedColumn()
     Id!: string;
 
-    @Property()
+    @Column()
     Name!: string;
 
-    @Property()
+    @Column()
     Email?: string;
 
-    @Property()
+    @Column()
     Password!: string;
 }
