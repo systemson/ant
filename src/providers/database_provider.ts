@@ -4,53 +4,67 @@ import { OrmFacade } from "../framework/orm_facade";
 import { Logger } from "../framework/logger";
 import { Lang } from "../framework/lang";
 import { createConnection } from "typeorm";
-/*
-class CustomNamingStrategy implements NamingStrategy {
-    getClassName(file: string): string {
-        return this.snakeCaseToCamelCase(file);
-    }
-    classToMigrationName(timestamp: string): string {
-        return timestamp;
-    }
-    classToTableName(entityName: string) {
-        return getEnv("BD_PREFIX")+this.camelCaseToSnakeCase(entityName);
-    }
-    joinColumnName(propertyName: string) {
-        return this.camelCaseToSnakeCase(propertyName) + "_" + this.referenceColumnName();
-    }
-    joinKeyColumnName(entityName: string, referencedColumnName: string) {
-        return this.classToTableName(entityName) + "_" + (referencedColumnName || this.referenceColumnName());
-    }
-    joinTableName(sourceEntity: string, targetEntity: string, propertyName: string) {
-        return this.classToTableName(sourceEntity) + "_" + this.classToTableName(propertyName);
-    }
-    propertyToColumnName(propertyName: string) {
-        return this.camelCaseToSnakeCase(propertyName);
-    }
-    referenceColumnName() {
-        return "id";
+import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
+import { snakeCase } from "typeorm/util/StringUtils";
+
+export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
+    tableName(className: string, customName: string): string {
+        return customName ? customName : snakeCase(className);
     }
 
-    protected camelCaseToSnakeCase(str: string): string {
-        return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`).replace("_", "");
+    columnName(
+        propertyName: string,
+        customName: string
+    ): string {
+        return (
+            customName ? customName : snakeCase(propertyName)
+        );
     }
 
-    protected snakeCaseToCamelCase(userInput: string) {
-        const userInputSplit = userInput.split("_");
-        let x = 0;
-        let userOutPut = "";
-        for (const prm of userInputSplit) {
-            if (x === 0) {
-                userOutPut = prm.toLowerCase();
-            } else {
-                userOutPut += prm.substr(0, 1).toUpperCase() + prm.substr(1).toLowerCase();
-            }
-            x++;
-        } 
-        return userOutPut;
+    relationName(propertyName: string): string {
+        return snakeCase(propertyName);
+    }
+
+    joinColumnName(relationName: string, referencedColumnName: string): string {
+        return snakeCase(relationName + "_" + referencedColumnName);
+    }
+
+    joinTableName(
+        firstTableName: string,
+        secondTableName: string,
+        firstPropertyName: string,
+    ): string {
+        return snakeCase(
+            firstTableName +
+            "_" +
+            firstPropertyName.replace(/\./gi, "_") +
+            "_" +
+            secondTableName,
+        );
+    }
+
+    joinTableColumnName(
+        tableName: string,
+        propertyName: string,
+        columnName?: string,
+    ): string {
+        return snakeCase(
+            tableName + "_" + (columnName ? columnName : propertyName),
+        );
+    }
+
+    classTableInheritanceParentColumnName(
+        parentTableName: unknown,
+        parentTableIdPropertyName: unknown,
+    ): string {
+        return snakeCase(parentTableName + "_" + parentTableIdPropertyName);
+    }
+
+    eagerJoinRelationAlias(alias: string, propertyPath: string): string {
+        return alias + "__" + propertyPath.replace(".", "_");
     }
 }
-*/
+
 export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -63,10 +77,10 @@ export default class DatabaseProvider extends ServiceProvider {
                 database: getEnv("DB_DATABASE"),
                 schema:  getEnv("DB_SCHEMA", "public"),
                 entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
-                //entities: ['./src/models/*.ts'],
                 entityPrefix: getEnv("BD_PREFIX"),
                 synchronize: false,
                 dropSchema: false,
+                namingStrategy: new SnakeCaseNamingStrategy(),
             }).then((connection) => {
                 resolve();
 
