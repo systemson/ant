@@ -65,8 +65,8 @@ export default class DatabaseProvider extends ServiceProvider {
                 entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
                 //entities: ['./src/models/*.ts'],
                 entityPrefix: getEnv("BD_PREFIX"),
-                synchronize: true,
-                dropSchema: true,
+                synchronize: false,
+                dropSchema: false,
             }).then((connection) => {
                 resolve();
 
