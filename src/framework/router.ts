@@ -1,9 +1,18 @@
-import { Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from "express";
+import { Express, Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from "express";
+import { getEnv } from "./helpers";
 
 export type RouterConfig = {
     scheme?: string;
     host?: string;
     port: string;
+}
+
+export function routerConfig(): RouterConfig {
+    return {
+        scheme: getEnv("APP_REST_SERVER_SCHEME", "http"),
+        host: getEnv("APP_REST_SERVER_HOST", "localhost"),
+        port: getEnv("APP_REST_SERVER_PORT", "3200"),
+    };
 }
 
 /**
@@ -30,16 +39,30 @@ export interface RouteContract {
 }
 
 export interface Response {
-    setData(data: unknown): Response;
+    setData(data?: unknown): Response;
     getData(): unknown;
 
-    setStatus(code: number): Response;
+    setStatus(code?: number): Response;
     getStatus(): number;
 
-    setHeaders(headers: any): Response;
+    setHeaders(headers?:  {
+        [key: string]: string;
+    }): Response;
+    setHeader(name: string, value: string): Response;
     getHeaders(): any;
 
-    fill(ressponse: ExpressResponse): ExpressResponse;
+    fill(response: ExpressResponse): ExpressResponse;
+
+    json(data?: unknown, status?: number, headers?: {[key: string]: string;}): Response;
+    xml(data?: unknown, status?: number, headers?: {[key: string]: string;}): Response;
+
+    accepted(data?: unknown, headers?: {[key: string]: string;}): Response;
+
+    unauthorized(data?: unknown, headers?: {[key: string]: string;}): Response;
+
+    notFound(data?: unknown, headers?: {[key: string]: string;}): Response;
+
+    error(data?: unknown, headers?: {[key: string]: string;}): Response;
 }
 
 export type Request = ExpressRequest
@@ -51,14 +74,28 @@ export class ResponseContainer implements Response {
 
     protected headers: any = {};
 
-    setStatus(code: number): Response {
-        this.codeStatus = code;
+    setStatus(code?: number): Response {
+        if (code) {
+            this.codeStatus = code;
+        }
 
         return this;
     }
 
-    setData(data: unknown): Response {
-        this.content = data;
+    setData(data?: unknown): Response {
+        if (data) {
+            this.content = data;
+        }
+
+        return this;
+    }
+
+    setHeaders(headers?: {
+        [key: string]: string;
+    }): Response {
+        if (headers) {
+            this.headers = headers;
+        }
 
         return this;
     }
@@ -71,10 +108,8 @@ export class ResponseContainer implements Response {
         return this.content;
     }
 
-    setHeaders(headers: {
-        [key: string]: string;
-    }): Response {
-        this.headers = headers;
+    setHeader(name: string, value: string): Response {
+        this.headers[name] = value;
 
         return this;
     }
@@ -89,12 +124,64 @@ export class ResponseContainer implements Response {
         return response
             .status(this.getStatus())
             .header(this.getHeaders())
-            .json(this.getData())
+            .send(this.getData())
+        ;
+    }
+    
+    json(data?: unknown, status = 200, headers: {[key: string]: string;} = {}): Response {
+        headers["Content-Type"] = "application/json";
+
+        return this
+            .setHeaders(headers)
+            .setData(data)
+            .setStatus(status)
+        ;
+    }
+
+    xml(data?: unknown, status = 200, headers: {[key: string]: string;} = {}): Response {
+        headers["Content-Type"] = "application/xml";
+
+        return this
+            .setHeaders(headers)
+            .setData(data)
+            .setStatus(status)
+        ;
+    }
+
+    accepted(data?: unknown, headers: {[key: string]: string;} = {}): Response {
+        return this
+            .setData(data)
+            .setStatus(202)
+            .setHeaders(headers)
+        ;
+    }
+
+    unauthorized(data?: unknown, headers: {[key: string]: string;} = {}): Response {
+        return this
+            .setData(data)
+            .setStatus(401)
+            .setHeaders(headers)
+        ;
+    }
+
+    notFound(data?: unknown, headers: {[key: string]: string;} = {}): Response {
+        return this
+            .setData(data)
+            .setStatus(404)
+            .setHeaders(headers)
+        ;
+    }
+
+    error(data?: unknown, headers: {[key: string]: string;} = {}): Response {
+        return this
+            .setData(data)
+            .setStatus(500)
+            .setHeaders(headers)
         ;
     }
 }
 
-export function response(body: unknown, code = 200, headers = {}): Response {
+export function response(body?: unknown, code = 200, headers = {}): Response {
     return (new ResponseContainer()).setData(body).setStatus(code).setHeaders(headers);
 }
 
@@ -123,5 +210,19 @@ export abstract class BaseRoute implements RouteContract {
 
     onFailed(req: Request, error?: unknown): void {
         //
+    }
+}
+
+export class RouterFacade {
+    protected static instance: Express;
+
+    public static setInstance(router: Express): RouterFacade {
+        this.instance = router;
+
+        return RouterFacade;
+    }
+
+    public static getInstance(): Express {
+        return this.instance;
     }
 }

@@ -15,11 +15,21 @@ export class TestWorkerRoute extends BaseRoute {
         // Adds a job to the queue
         await QueueEngineFacade.add(job, {name: status});
 
-        return response({
+        if (!["completed", "failed"].includes(status)) {
+            return response().error({
+                status: Lang.__("failed"),
+                messaje: Lang.__("Status [{{status}}] not supported.", {
+                    status: status,
+                }),
+            });
+        }
+
+        return response().json({
             status: Lang.__("ok"),
-            messaje: Lang.__("Job [{{name}}] scheduled.", {
-                name: job,
-            })
+            messaje: Lang.__("Job [{{job}}] scheduled.", {
+                job: job,
+            }),
+            result: status,
         });
     } 
 }

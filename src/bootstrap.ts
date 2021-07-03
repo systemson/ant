@@ -1,14 +1,17 @@
 import { ServiceProviderContract } from "./framework/service_provider";
 import { WorkerContract } from "./framework/queue";
 import { RouteContract } from "./framework/router";
-import DatabaseProvider from "./providers/database_provider";
-import FileDirectoryProvider from "./providers/file_directory_provider";
-import LocaleProvider from "./providers/locale_provider";
+import DatabaseProvider from "./providers/database.provider";
+import FileDirectoryProvider from "./providers/file_directory.provider";
+import LocaleProvider from "./providers/locale.provider";
 import { HomeRoute } from "./routes/home.route";
 import { InfoRoute } from "./routes/info.route";
-import LogProvider from "./providers/log_provider";
-import CacheProvider from "./providers/cache_provider";
+import LogProvider from "./providers/log.provider";
+import CacheProvider from "./providers/cache.provider";
 import { UserListRoute } from "./routes/users_list.route";
+import RouterProvider from "./providers/router.provider";
+import { TestWorkerRoute } from "./routes/test_worker.route";
+import { TestWorker } from "./workers/test.worker";
 
 export class Boostrap {
 
@@ -20,6 +23,7 @@ export class Boostrap {
         LocaleProvider,
         LogProvider,
         CacheProvider,
+        RouterProvider,
         DatabaseProvider
     ];
 
@@ -30,13 +34,13 @@ export class Boostrap {
         HomeRoute,
         InfoRoute,
         UserListRoute,
-        // TestWorkerRoute,
+        TestWorkerRoute,
     ];
 
     /**
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        // TestWorker
+        TestWorker
     ];
 }
