@@ -3,9 +3,11 @@ if (!fs.existsSync(".env")) {
     throw new Error("No environment variables file [.env] found.");
 }
 
+import { Lang } from "./lang";
 import dotenv from "dotenv";
 import { Logger } from "./logger";
 dotenv.config();
+import moment, { Moment } from 'moment';
 
 export function getEnv(key: string, fallback?: string): string {
     return process.env[key] || fallback || "";
@@ -21,13 +23,11 @@ export function logCatchedError(error?: {message?: string; stack?: string;}): vo
     Logger.trace(error?.stack || Lang.__("No trace stack provided for this error."));
 }
 
-import { DateTime } from "luxon";
-import { Lang } from "./lang";
-export function now(): DateTime {
-    return DateTime.now();
+export function now(): Moment  {
+    return moment();
 }
 export function dateFormated(format: TIME_FORMAT): string {
-    return DateTime.now().toFormat(format);
+    return now().format(format);
 }
 export function timestamp(): string {
     return dateFormated(TIMESTAMP_FORMAT);
@@ -39,12 +39,11 @@ export function time(): string {
     return dateFormated(HOUR_FORMAT);
 }
 
-export type TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS" | "yyyy-MM-dd HH:mm:ss.SSS" | "yyyy-MM-dd HH:mm:ss" |"yyyyMMddHHmmss" | "yyyy-MM-dd" | "yyyy/MM/dd" | "HH:mm:ss" | "HH:mm:ss.SSS" | "HHmmss" | "HHmmssSSS";
+export type TIME_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS" | "YYYY-MM-DD HH:mm:ss.SSS" | "YYYY-MM-DD HH:mm:ss" |"YYYYMMDDHHmmss" | "YYYY-MM-DD" | "YYYY/MM/DD" | "HH:mm:ss" | "HH:mm:ss.SSS" | "HHmmss" | "HHmmssSSS";
 
-export const TIMESTAMP_FORMAT: TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
-export const DATE_FORMAT: TIME_FORMAT = "yyyy-MM-dd";
+export const TIMESTAMP_FORMAT: TIME_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS";
+export const DATE_FORMAT: TIME_FORMAT = "YYYY-MM-DD";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
-
 
 export function dummyCallback(...any: unknown[]): void {
     //

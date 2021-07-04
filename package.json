@@ -1,7 +1,7 @@
 {
   "name": "micra",
   "version": "1.0.0",
-  "description": "NodeJS + Redis microservices framework",
+  "description": "NodeJS + Redis tiny microservices framework",
   "type": "commonjs",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
     "express": "^4.17.1",
     "i18n": "^0.13.3",
     "ioredis": "^4.27.6",
-    "luxon": "^1.27.0",
+    "moment": "^2.29.1",
     "pg": "^8.6.0",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.34"
