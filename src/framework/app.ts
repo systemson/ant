@@ -99,7 +99,15 @@ export class App {
                         queue: queueName,
                     }));
 
-                    QueueEngineFacade.bootQueue(queueName, {connection: instance.getOptions().connection});
+                    const queueOptions = {
+                        connection: instance.getOptions().connection,
+                        backoff: {
+                            type: "exponential",
+                            delay: 1000
+                        }
+                    };
+
+                    QueueEngineFacade.bootQueue(queueName, queueOptions);
 
                     const concrete = new Worker(
                         queueName,

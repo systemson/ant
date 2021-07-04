@@ -87,9 +87,15 @@ export class QueueEngineFacade {
     protected static instances: Map<string, Queue> = new Map();
     protected static default: string;
 
-    public static bootQueue(name: string, options?: QueueOptions): typeof QueueEngineFacade {
+    public static async bootQueue(name: string, options?: QueueOptions): Promise<typeof QueueEngineFacade> {
         if (!QueueEngineFacade.instances.has(name)) {
-            QueueEngineFacade.instances.set(name,  new Queue(name, options));
+            const queue = new Queue(name, options);
+
+            if (getEnv("APP_QUEUE_REMOVE_FAILED_ON_START") === "true") {
+                await queue.clean(5 * 60 * 1000, 0, "failed");
+            }
+
+            QueueEngineFacade.instances.set(name, queue);
         }
 
         return QueueEngineFacade;
