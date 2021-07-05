@@ -1,4 +1,4 @@
-import { Job, Queue, QueueOptions, WorkerOptions  } from "bullmq";
+import { Job, Queue, QueueOptions, QueueScheduler, WorkerOptions  } from "bullmq";
 import { dummyCallback, getEnv } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 
@@ -85,6 +85,7 @@ export abstract class BaseWorker implements WorkerContract {
 
 export class QueueEngineFacade {
     protected static instances: Map<string, Queue> = new Map();
+    protected static schedulers: Map<string, QueueScheduler> = new Map();
     protected static default: string;
 
     public static async bootQueue(name: string, options?: QueueOptions): Promise<typeof QueueEngineFacade> {
@@ -96,6 +97,16 @@ export class QueueEngineFacade {
             }
 
             QueueEngineFacade.instances.set(name, queue);
+
+            if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
+                const Scheduler = new QueueScheduler(name, {
+                    connection: options?.connection,
+                    maxStalledCount: 10,
+                    stalledInterval: 1000,
+                });
+    
+                QueueEngineFacade.schedulers.set(name, Scheduler);
+            }
         }
 
         return QueueEngineFacade;
@@ -116,10 +127,19 @@ export class QueueEngineFacade {
     }
 
     public static add(jobName: string, data: unknown): Promise<unknown> {
+        let backoff;
+        if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
+            backoff = {
+                type: getEnv("APP_QUEUE_RETRY_STRATEGY", "fixed"),
+                delay: parseInt(getEnv("APP_QUEUE_RETRY_DELAY", "1000")),
+            };
+        }
+
         return QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
             removeOnComplete: true,
             attempts: parseInt(getEnv("APP_QUEUE_RETRIES", "3")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
+            backoff: backoff,
         });
     }
 }

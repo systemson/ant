@@ -100,11 +100,7 @@ export class App {
                     }));
 
                     const queueOptions = {
-                        connection: instance.getOptions().connection,
-                        backoff: {
-                            type: "exponential",
-                            delay: 1000
-                        }
+                        connection: instance.getOptions().connection
                     };
 
                     QueueEngineFacade.bootQueue(queueName, queueOptions);
