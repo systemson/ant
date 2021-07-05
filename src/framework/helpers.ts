@@ -7,7 +7,7 @@ import { Lang } from "./lang";
 import dotenv from "dotenv";
 import { Logger } from "./logger";
 dotenv.config();
-import moment, { Moment } from 'moment';
+import moment, { Moment } from "moment";
 
 export function getEnv(key: string, fallback?: string): string {
     return process.env[key] || fallback || "";
