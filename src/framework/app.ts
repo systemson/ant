@@ -16,7 +16,7 @@ export class App {
         this.init();
     }
 
-    public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<void> {
+    public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (routeClasses.length > 0) {
                 Logger.audit(Lang.__("Routes set up started."));
@@ -51,7 +51,7 @@ export class App {
 
                         instance.doHandle(req)
                             .then((handler: Response) => {
-                                handler.fill(res).send();
+                                handler.send(res);
 
                                 Logger.debug(Lang.__("Request handled in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                                 Logger.trace(Lang.__("Server response: ") + JSON.stringify(handler.getData(), null, 4));
@@ -75,7 +75,7 @@ export class App {
 
                     Logger.audit(Lang.__("Route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}] is ready.", routeData));
                 }
-                resolve();
+                resolve(routeClasses.length);
             } else {
                 reject({
                     message: "No routes found.",
@@ -84,7 +84,7 @@ export class App {
         });
     }
 
-    public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<void> {
+    public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
                 Logger.audit(Lang.__("Workers set up started."));
@@ -165,7 +165,7 @@ export class App {
                         queue: queueName,
                     }));
                 }
-                resolve();
+                resolve(workerClasses.length);
             } else {
                 reject({
                     message: "No workers found.",
@@ -209,27 +209,30 @@ export class App {
     public boot(): Promise<void> {
         return new Promise((resolve, rejects) => {
             try {
-                this.bootProviders().then(() => {
+                this.bootProviders().then(async () => {
                     Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
 
-                    this.setRoutes(this.boostrap.routes)
-                        .then(() => {
-                            Logger.audit(Lang.__("Routes set up completed."));
+                    await this.setRoutes(this.boostrap.routes)
+                        .then((count: number) => {
+                            Logger.audit(Lang.__("Routes set up completed [{{count}}].", {
+                                count: count.toString()
+                            }));
                         }, (error) => {
                             Logger.audit(Lang.__(error.message));
                         })
                         .catch(logCatchedException)
                     ;
 
-                    this.setWorkers(this.boostrap.workers)
-                        .then(() => {
-                            Logger.audit(Lang.__("Workers set up completed."));
+                    await this.setWorkers(this.boostrap.workers)
+                        .then((count: number) => {
+                            Logger.audit(Lang.__("Workers set up completed [{{count}}].", {
+                                count: count.toString()
+                            }));
                         }, (error) => {
                             Logger.audit(Lang.__(error.message));
                         })
                         .catch(logCatchedException)
                     ;
-
                 }).catch(logCatchedException);
 
             } catch (error) {

@@ -28,11 +28,19 @@ export class FileLogger implements LogDriverContract {
     ) {}
 
     log(msg: string): Promise<void>  {
+        this.init(this.folder);
+
         return new Promise(() => {
             const fileName = `${this.name.toLowerCase()}-${today()}.log`;
 
             fs.appendFileSync(`${this.folder}/${fileName}`, msg + EOL);
         });
+    }
+
+    protected init(logDir: string): void {
+        if (!fs.existsSync(logDir)){
+            fs.mkdirSync(logDir);
+        }
     }
 }
 

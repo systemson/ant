@@ -1,5 +1,5 @@
 import { Express, Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from "express";
-import { getEnv } from "./helpers";
+import { dummyCallback, getEnv } from "./helpers";
 
 export type RouterConfig = {
     scheme?: string;
@@ -51,7 +51,7 @@ export interface Response {
     setHeader(name: string, value: string): Response;
     getHeaders(): any;
 
-    fill(response: ExpressResponse): ExpressResponse;
+    send(response: ExpressResponse): ExpressResponse;
 
     json(data?: unknown, status?: number, headers?: {[key: string]: string;}): Response;
     xml(data?: unknown, status?: number, headers?: {[key: string]: string;}): Response;
@@ -120,7 +120,7 @@ export class ResponseContainer implements Response {
         return this.headers;
     }
 
-    fill(response: ExpressResponse): ExpressResponse {
+    send(response: ExpressResponse): ExpressResponse {
         return response
             .status(this.getStatus())
             .header(this.getHeaders())
@@ -205,11 +205,11 @@ export abstract class BaseRoute implements RouteContract {
     }
 
     onCompleted(req: Request): void {
-        //
+        dummyCallback(req);
     }
 
     onFailed(req: Request, error?: unknown): void {
-        //
+        dummyCallback(req, error);
     }
 }
 
