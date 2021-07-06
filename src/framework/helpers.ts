@@ -20,7 +20,11 @@ export function logCatchedException(error?: {message?: string; stack?: string;})
 }
 export function logCatchedError(error?: {message?: string; stack?: string;}): void {
     Logger.error(error?.message || Lang.__("No message provided for this error."));
-    Logger.trace(error?.stack || Lang.__("No trace stack provided for this error."));
+    if (getEnv("APP_MODE", "production") === "develop") {
+        Logger.trace(JSON.stringify(error, null, 4));
+    } else {
+        Logger.trace(error?.stack || Lang.__("No trace stack provided for this error."));
+    }
 }
 
 export function now(): Moment  {
