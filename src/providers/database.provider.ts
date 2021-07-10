@@ -67,9 +67,9 @@ export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements Na
 
 export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             createConnection({
-                type: getEnv("DB_TYPE", "postgresql") as any,
+                type: getEnv("DB_TYPE", "postgres") as any,
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
                 username: getEnv("DB_USERNAME", "postgres"),
@@ -86,9 +86,18 @@ export default class DatabaseProvider extends ServiceProvider {
 
                 OrmFacade.orm = connection;
                 Logger.audit(Lang.__("ORM [{{name}}] started.", {
-                    name: connection.constructor.name,
+                    name: "TypeORM",
                 }));
-            }, reject).catch(logCatchedException);
+            })
+                .catch((error) => {
+                    Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}].", {
+                        host: getEnv("DB_HOST", "localhost"),
+                        port: getEnv("DB_PORT", "5432"),
+                        driver: getEnv("DB_TYPE", "postgres"),
+                    }));
+
+                    logCatchedException(error);
+                });
         });
     }
 }

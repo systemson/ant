@@ -1,5 +1,7 @@
 import IORedis, { Redis } from "ioredis";
-import { getEnv, logCatchedError } from "./helpers";
+import { getEnv, logCatchedError, logCatchedException } from "./helpers";
+import { Lang } from "./lang";
+import { Logger } from "./logger";
 
 export interface CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void>;
@@ -23,6 +25,15 @@ export class RedisChacheDriver implements CacheDriverContract {
         if (this.client === undefined) {
             this.client = new IORedis(this.config.port, this.config.host, {
                 password: this.config.password
+            });
+
+            this.client.on("error", (error) => {
+                Logger.error(Lang.__("Could not connect to redis server on [{{host}}:{{port}}].", {
+                    host: this.config.host,
+                    port: this.config.port.toString(),
+                }));
+
+                logCatchedException(error);
             });
         }
     }

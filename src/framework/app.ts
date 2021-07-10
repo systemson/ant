@@ -182,14 +182,18 @@ export class App {
         for (const providerClass of this.boostrap.providers) {
             const provider = new providerClass();
 
-            promises.push(provider.init().then((data) => {
-                Logger.audit(Lang.__("Booting service provider [{{name}}]", {
-                    name: data.name,
-                }));
-            }));
+            promises.push(
+                provider.init().then((data) => {
+                    Logger.audit(Lang.__("Booting service provider [{{name}}]", {
+                        name: data.name,
+                    }));
+                })
+                    .catch(logCatchedException)
+            );
         }
 
-        await Promise.all(promises);
+        await Promise.all(promises).catch(logCatchedException);
+
         Logger.audit(Lang.__("Service providers booting completed."));
     }
 

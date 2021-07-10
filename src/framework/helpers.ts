@@ -16,7 +16,7 @@ export function getEnv(key: string, fallback?: string): string {
 export function logCatchedException(error?: {message?: string; stack?: string;}): void {
     logCatchedError(error);
     Logger.fatal("An unrecoverable error has occurred. Shutting down application.");
-    process.exit();
+    process.exit(1);
 }
 export function logCatchedError(error?: {message?: string; stack?: string;}): void {
     Logger.error(error?.message || Lang.__("No message provided for this error."));
@@ -48,6 +48,10 @@ export type TIME_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS" | "YYYY-MM-DD HH:mm:ss.SSS
 export const TIMESTAMP_FORMAT: TIME_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS";
 export const DATE_FORMAT: TIME_FORMAT = "YYYY-MM-DD";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
+
+export function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export function dummyCallback(...any: unknown[]): void {
     //

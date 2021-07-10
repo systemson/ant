@@ -1,6 +1,8 @@
 import { Job, Queue, QueueOptions, QueueScheduler, WorkerOptions  } from "bullmq";
-import { dummyCallback, getEnv } from "./helpers";
+import { dummyCallback, getEnv, logCatchedException } from "./helpers";
 import IORedis, { Redis } from "ioredis";
+import { Logger } from "./logger";
+import { Lang } from "./lang";
 
 /**
  * The Worker base interface
@@ -52,15 +54,31 @@ export abstract class BaseWorker implements WorkerContract {
 
     protected getConnection(): Redis {
         if (typeof this.connection === "undefined") {
+
+            const config = {
+                port: parseInt(getEnv("REDIS_PORT", "6379")),
+                host: getEnv("REDIS_HOST", "localhost"),
+                password: getEnv("REDIS_PASSWORD"),
+
+            };
             const redis = new IORedis(
-                parseInt(getEnv("REDIS_PORT", "6379")),
-                getEnv("REDIS_HOST", "localhost"),
+                config.port,
+                config.host,
                 {
-                    password: getEnv("REDIS_PASSWORD")
+                    password: config.password
                 }
             );
 
             this.connection = redis;
+
+            this.connection.on("error", (error) => {
+                Logger.error(Lang.__("Could not connect to redis server on [{{host}}:{{port}}].", {
+                    host: config.host,
+                    port: config.port.toString(),
+                }));
+
+                logCatchedException(error);
+            });
         }
         return this.connection;
     }
