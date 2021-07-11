@@ -19,8 +19,6 @@ export class App {
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (routeClasses.length > 0) {
-                Logger.audit(Lang.__("Routes set up started."));
-
                 for (const routeClass of routeClasses) {
                     const instance = new routeClass() as RouteContract;
                     const config = routerConfig();
@@ -87,9 +85,18 @@ export class App {
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
-                Logger.audit(Lang.__("Workers set up started."));
+                const promises: Promise<any>[] = [];
+                const getRouteData = (name: string, queue: string, job: Job, data?: any) => {
+                    return {
+                        job: job.name,
+                        id: job.id?.toString() as string,
+                        name: name,
+                        queue: queue,
+                        data: data,
+                    };
+                };
 
-                for (const workerClass of workerClasses) {
+                for (const [index, workerClass] of Object.entries(workerClasses)) {
                     const instance = new workerClass();
 
                     const queueName = instance.getQueueName();
@@ -103,69 +110,78 @@ export class App {
                         connection: instance.getOptions().connection
                     };
 
-                    QueueEngineFacade.bootQueue(queueName, queueOptions);
+                    promises[parseInt(index)] = QueueEngineFacade.bootQueue(queueName, queueOptions).then(() => {
 
-                    const concrete = new Worker(
-                        queueName,
-                        (job: Job) => {
-                            Logger.debug(Lang.__("Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].", {
-                                name: instance.constructor.name,
-                                job: job.name,
-                                queue: queueName,
-                                id: job.id?.toString() as string,
-                            }));
+                        const concrete = new Worker(
+                            queueName,
+                            (job: Job) => {
+                                Logger.debug(Lang.__(
+                                    "Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].",
+                                    getRouteData(
+                                        instance.constructor.name,
+                                        queueName,
+                                        job
+                                    )
+                                ));
+
+                                Logger.trace(JSON.stringify(job, null, 4));
+    
+                                return instance.handler(job);
+                            },
+                            instance.getOptions()
+                        );
+    
+                        concrete.on("completed", (job: Job, returnValue: any) => {
+                            Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.",
+                                getRouteData(
+                                    instance.constructor.name,
+                                    queueName,
+                                    job,
+                                    JSON.stringify(returnValue, null, 4)
+                                )
+                            ));
                             Logger.trace(JSON.stringify(job, null, 4));
-
-                            return instance.handler(job);
-                        },
-                        instance.getOptions()
-                    );
-
-                    concrete.on("completed", (job: Job, returnValue: any) => {
-                        Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.", {
-                            name: instance.constructor.name,
-                            job: job.name,
-                            queue: queueName,
-                            id: job.id?.toString() as string,
-                            data: JSON.stringify(returnValue, null, 4),
-                        }));
-                        Logger.trace(JSON.stringify(job, null, 4));
-                    });
-
-                    concrete.on("progress", (job: Job, progress: number | unknown) => {
-                        Logger.debug(JSON.stringify(job, null, 4));
-                        Logger.trace(JSON.stringify(progress));
-                    });
-
-                    concrete.on("failed", (job: Job, failedReason: string) => {
-                        Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}]. {{data}}.", {
-                            name: instance.constructor.name,
-                            job: job.name,
-                            queue: queueName,
-                            id: job.id?.toString() as string,
-                            data: failedReason,
-                        }));
-
-                        Logger.trace(JSON.stringify(job, null, 4));
-
-                        instance.handleFailed(job, failedReason);
-                    });
-
-                    concrete.on("error", logCatchedError);
-
-                    concrete.on("drained", () => {
-                        Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", {
+                        });
+    
+                        concrete.on("progress", (job: Job, progress: number | unknown) => {
+                            Logger.debug(JSON.stringify(job, null, 4));
+                            Logger.trace(JSON.stringify(progress));
+                        });
+    
+                        concrete.on("failed", (job: Job, failedReason: string) => {
+                            Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}]. {{data}}.",
+                                getRouteData(
+                                    instance.constructor.name,
+                                    queueName,
+                                    job,
+                                    failedReason
+                                )
+                            ));
+                            Logger.trace(JSON.stringify(job, null, 4));
+    
+                            instance.handleFailed(job, failedReason);
+                        });
+    
+                        concrete.on("error", logCatchedError);
+    
+                        concrete.on("drained", () => {
+                            Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", {
+                                name: instance.constructor.name,
+                                queue: queueName,
+                            }));
+                        });
+            
+                        Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
                             name: instance.constructor.name,
                             queue: queueName,
                         }));
                     });
-        
-                    Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
-                        name: instance.constructor.name,
-                        queue: queueName,
-                    }));
                 }
-                resolve(workerClasses.length);
+
+                return Promise.all(promises).then(() => {
+                    resolve(workerClasses.length);
+                });
+
             } else {
                 reject({
                     message: "No workers found.",
@@ -216,6 +232,7 @@ export class App {
                 this.bootProviders().then(async () => {
                     Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
 
+                    Logger.audit(Lang.__("Routes set up started."));
                     await this.setRoutes(this.boostrap.routes)
                         .then((count: number) => {
                             Logger.audit(Lang.__("Routes set up completed [{{count}}].", {
@@ -227,6 +244,7 @@ export class App {
                         .catch(logCatchedException)
                     ;
 
+                    Logger.audit(Lang.__("Workers set up started."));
                     await this.setWorkers(this.boostrap.workers)
                         .then((count: number) => {
                             Logger.audit(Lang.__("Workers set up completed [{{count}}].", {

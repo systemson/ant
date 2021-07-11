@@ -50,7 +50,10 @@ export const DATE_FORMAT: TIME_FORMAT = "YYYY-MM-DD";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
 
 export function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    Logger.fatal("Esperando " + ms);
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms, [ms]);
+    });
 }
 
 export function dummyCallback(...any: unknown[]): void {
