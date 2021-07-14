@@ -12,17 +12,17 @@ export class TestWorkerRoute extends BaseRoute {
 
         const status = req.params.status;
 
-        // Adds a job to the queue
-        await QueueEngineFacade.add(job, {name: status});
-
         if (!["completed", "failed"].includes(status)) {
             return response().error({
                 status: Lang.__("failed"),
-                messaje: Lang.__("Status [{{status}}] not supported.", {
+                messaje: Lang.__("Status [{{status}}] not supported. Supported statuses allowed [completed], [failed].", {
                     status: status,
                 }),
             });
         }
+
+        // Adds a job to the queue
+        await QueueEngineFacade.add(job, {name: status});
 
         return response().json({
             status: Lang.__("ok"),

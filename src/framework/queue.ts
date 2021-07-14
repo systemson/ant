@@ -1,5 +1,5 @@
 import { Job, Queue, QueueOptions, QueueScheduler, WorkerOptions  } from "bullmq";
-import { dummyCallback, getEnv, logCatchedException } from "./helpers";
+import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 import { Logger } from "./logger";
 import { Lang } from "./lang";
@@ -37,6 +37,13 @@ export interface WorkerContract {
      * @param failedReason
      */
     handleFailed(job: Job, failedReason: string): void
+
+    getWorkerData(job?: Job, data?: unknown): {name: string; queue: string, job?: string, id?: string; data?: string};
+
+    onCompleted(job: Job, returnValue: unknown): void;
+    onProgress(job: Job, progress: number | unknown): void;
+    onFailed(job: Job, failedReason: Error): void;
+    onDrained(): void;
 }
 
 export abstract class BaseWorker implements WorkerContract {
@@ -98,6 +105,49 @@ export abstract class BaseWorker implements WorkerContract {
 
     public handleFailed(job: Job, failedReason: string): void {
         dummyCallback(job, failedReason);
+    }
+
+    public onCompleted(job: Job, returnValue: unknown): void {
+        Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.",
+            this.getWorkerData(
+                job,
+                JSON.stringify(returnValue, null, 4)
+            )
+        ));
+        Logger.trace(JSON.stringify(job, null, 4));
+    }
+
+    public onProgress(job: Job<any, any, string>, progress: unknown): void {
+        Logger.debug(JSON.stringify(job, null, 4));
+        Logger.trace(JSON.stringify(progress));
+    }
+
+    public onFailed(job: Job, failedReason: Error): void {
+        Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}].",
+            this.getWorkerData(
+                job
+            )
+        ));
+
+        logCatchedError(failedReason);
+        
+        Logger.trace(JSON.stringify(job, null, 4));
+        
+        this.handleFailed(job, failedReason.message);
+    }
+
+    public onDrained(): void {
+        Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", this.getWorkerData()));
+    }
+    
+    public getWorkerData(job?: Job, data?: unknown): {name: string; queue: string, job?: string, id?: string; data?: string} {
+        return {
+            job: job?.name,
+            id: job?.id?.toString() as string,
+            name: this.constructor.name,
+            queue: this.getQueueName(),
+            data: JSON.stringify(data),
+        };
     }
 }
 
@@ -161,3 +211,4 @@ export class QueueEngineFacade {
         });
     }
 }
+

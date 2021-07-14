@@ -86,15 +86,6 @@ export class App {
         return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
                 const promises: Promise<any>[] = [];
-                const getRouteData = (name: string, queue: string, job: Job, data?: any) => {
-                    return {
-                        job: job.name,
-                        id: job.id?.toString() as string,
-                        name: name,
-                        queue: queue,
-                        data: data,
-                    };
-                };
 
                 for (const [index, workerClass] of Object.entries(workerClasses)) {
                     const instance = new workerClass();
@@ -117,11 +108,7 @@ export class App {
                             (job: Job) => {
                                 Logger.debug(Lang.__(
                                     "Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].",
-                                    getRouteData(
-                                        instance.constructor.name,
-                                        queueName,
-                                        job
-                                    )
+                                    instance.getWorkerData(job)
                                 ));
 
                                 Logger.trace(JSON.stringify(job, null, 4));
@@ -131,45 +118,21 @@ export class App {
                             instance.getOptions()
                         );
     
-                        concrete.on("completed", (job: Job, returnValue: any) => {
-                            Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.",
-                                getRouteData(
-                                    instance.constructor.name,
-                                    queueName,
-                                    job,
-                                    JSON.stringify(returnValue, null, 4)
-                                )
-                            ));
-                            Logger.trace(JSON.stringify(job, null, 4));
+                        concrete.on("completed", (job: Job, returnValue: unknown) => {
+                            instance.onCompleted(job, returnValue);
                         });
-    
-                        concrete.on("progress", (job: Job, progress: number | unknown) => {
-                            Logger.debug(JSON.stringify(job, null, 4));
-                            Logger.trace(JSON.stringify(progress));
+
+                        concrete.on("progress", (job: Job<any, any, string>, progress: unknown) => {
+                            instance.onProgress(job, progress);
                         });
-    
-                        concrete.on("failed", (job: Job, failedReason: string) => {
-                            Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}]. {{data}}.",
-                                getRouteData(
-                                    instance.constructor.name,
-                                    queueName,
-                                    job,
-                                    failedReason
-                                )
-                            ));
-                            Logger.trace(JSON.stringify(job, null, 4));
-    
-                            instance.handleFailed(job, failedReason);
+
+                        concrete.on("failed", (job: Job, failedReason: Error) => {
+                            instance.onFailed(job, failedReason);
                         });
-    
+
+                        concrete.on("drained", () => instance.onDrained());
+
                         concrete.on("error", logCatchedError);
-    
-                        concrete.on("drained", () => {
-                            Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", {
-                                name: instance.constructor.name,
-                                queue: queueName,
-                            }));
-                        });
             
                         Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
                             name: instance.constructor.name,
@@ -178,7 +141,7 @@ export class App {
                     });
                 }
 
-                return Promise.all(promises).then(() => {
+                Promise.all(promises).then(() => {
                     resolve(workerClasses.length);
                 });
 
