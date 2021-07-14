@@ -16,6 +16,12 @@ export class App {
         this.init();
     }
 
+    /**
+     * @todo SHOULD be moved to a provider.
+     * 
+     * @param routeClasses 
+     * @returns 
+     */
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (routeClasses.length > 0) {
@@ -82,6 +88,12 @@ export class App {
         });
     }
 
+    /**
+     * @todo SHOULD be moved to a provider.
+     * 
+     * @param workerClasses 
+     * @returns 
+     */
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
