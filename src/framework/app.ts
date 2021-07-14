@@ -112,50 +112,53 @@ export class App {
                     const queueOptions = {
                         connection: instance.getOptions().connection
                     };
+                    
+                    QueueEngineFacade.bootQueue(queueName, queueOptions);
 
-                    promises[parseInt(index)] = QueueEngineFacade.bootQueue(queueName, queueOptions).then(() => {
+                    const concrete = new Worker(
+                        queueName,
+                        (job: Job) => {
+                            Logger.debug(Lang.__(
+                                "Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].",
+                                instance.getWorkerData(job)
+                            ));
 
-                        const concrete = new Worker(
-                            queueName,
-                            (job: Job) => {
-                                Logger.debug(Lang.__(
-                                    "Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].",
-                                    instance.getWorkerData(job)
-                                ));
+                            Logger.trace(JSON.stringify(job, null, 4));
 
-                                Logger.trace(JSON.stringify(job, null, 4));
-    
-                                return instance.handler(job);
-                            },
-                            instance.getOptions()
-                        );
-    
-                        concrete.on("completed", (job: Job, returnValue: unknown) => {
-                            instance.onCompleted(job, returnValue);
-                        });
+                            return instance.handler(job);
+                        },
+                        instance.getOptions()
+                    );
 
-                        concrete.on("progress", (job: Job<any, any, string>, progress: unknown) => {
-                            instance.onProgress(job, progress);
-                        });
-
-                        concrete.on("failed", (job: Job, failedReason: Error) => {
-                            instance.onFailed(job, failedReason);
-                        });
-
-                        concrete.on("drained", () => instance.onDrained());
-
-                        concrete.on("error", logCatchedError);
-            
-                        Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
-                            name: instance.constructor.name,
-                            queue: queueName,
-                        }));
+                    concrete.on("completed", (job: Job, returnValue: unknown) => {
+                        instance.onCompleted(job, returnValue);
                     });
-                }
 
-                Promise.all(promises).then(() => {
-                    resolve(workerClasses.length);
-                });
+                    concrete.on("progress", (job: Job<any, any, string>, progress: unknown) => {
+                        instance.onProgress(job, progress);
+                    });
+
+                    concrete.on("failed", (job: Job, failedReason: Error) => {
+                        instance.onFailed(job, failedReason);
+                    });
+
+                    concrete.on("drained", () => instance.onDrained());
+
+                    concrete.on("error", logCatchedError);
+        
+                    Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
+                        name: instance.constructor.name,
+                        queue: queueName,
+                    }));
+
+                    if (getEnv("APP_QUEUE_REMOVE_FAILED_ON_START") === "true") {
+                        QueueEngineFacade.getInstance(queueName).clean(5 * 60 * 1000, 0, "failed").then(() => {
+                            resolve(workerClasses.length);
+                        });
+                    } else {
+                        resolve(workerClasses.length)
+                    }
+                }
 
             } else {
                 reject({

@@ -156,13 +156,9 @@ export class QueueEngineFacade {
     protected static schedulers: Map<string, QueueScheduler> = new Map();
     protected static default: string;
 
-    public static async bootQueue(name: string, options?: QueueOptions): Promise<typeof QueueEngineFacade> {
+    public static bootQueue(name: string, options?: QueueOptions): typeof QueueEngineFacade {
         if (!QueueEngineFacade.instances.has(name)) {
             const queue = new Queue(name, options);
-
-            if (getEnv("APP_QUEUE_REMOVE_FAILED_ON_START") === "true") {
-                await queue.clean(5 * 60 * 1000, 0, "failed");
-            }
 
             QueueEngineFacade.instances.set(name, queue);
 
