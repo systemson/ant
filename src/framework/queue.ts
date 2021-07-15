@@ -159,6 +159,8 @@ export class QueueEngineFacade {
 
     public static bootQueue(name: string, queueOptions?: QueueOptions): typeof QueueEngineFacade {
         if (!QueueEngineFacade.instances.has(name)) {
+            queueOptions = queueOptions || this.fallbackConfig();
+
             const queue = new Queue(name, queueOptions);
 
             QueueEngineFacade.instances.set(name, queue);
@@ -205,6 +207,32 @@ export class QueueEngineFacade {
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
             backoff: backoff,
         });
+    }
+    
+    private static fallbackConfig(): QueueOptions {
+        const config = {
+            port: parseInt(getEnv("REDIS_PORT", "6379")),
+            host: getEnv("REDIS_HOST", "localhost"),
+            password: getEnv("REDIS_PASSWORD"),
+        };
+
+        const redis = new IORedis(config.port, config.host, {
+            password: config.password
+        });
+
+        redis.on("error", (error) => {
+            Logger.error(Lang.__("Could not connect to redis server on [{{host}}:{{port}}].", {
+                host: config.host,
+                port: config.port.toString(),
+            }));
+
+            logCatchedException(error);
+        });
+
+        return {
+            connection: redis,
+            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
+        };
     }
 }
 
