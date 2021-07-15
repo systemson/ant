@@ -1,4 +1,4 @@
-import { Job, Queue, QueueOptions, QueueScheduler, WorkerOptions  } from "bullmq";
+import { Job, Queue, QueueOptions, QueueScheduler, QueueSchedulerOptions, WorkerOptions  } from "bullmq";
 import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 import { Logger } from "./logger";
@@ -94,6 +94,7 @@ export abstract class BaseWorker implements WorkerContract {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
             connection: this.getConnection(),
+            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
         };
 
         return options;
@@ -156,19 +157,18 @@ export class QueueEngineFacade {
     protected static schedulers: Map<string, QueueScheduler> = new Map();
     protected static default: string;
 
-    public static bootQueue(name: string, options?: QueueOptions): typeof QueueEngineFacade {
+    public static bootQueue(name: string, queueOptions?: QueueOptions): typeof QueueEngineFacade {
         if (!QueueEngineFacade.instances.has(name)) {
-            const queue = new Queue(name, options);
+            const queue = new Queue(name, queueOptions);
 
             QueueEngineFacade.instances.set(name, queue);
 
             if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
-                const Scheduler = new QueueScheduler(name, {
-                    connection: options?.connection,
-                    maxStalledCount: 10,
-                    stalledInterval: 1000,
-                });
-    
+                const queueSchedulerOptions = queueOptions as QueueSchedulerOptions;
+                queueSchedulerOptions["maxStalledCount"] = 10;
+                queueSchedulerOptions["stalledInterval"] = 1000;
+
+                const Scheduler = new QueueScheduler(name, queueSchedulerOptions);
                 QueueEngineFacade.schedulers.set(name, Scheduler);
             }
         }

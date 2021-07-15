@@ -3,7 +3,7 @@ import { Lang } from "../framework/lang";
 import { Logger } from "./logger";
 import { QueueEngineFacade, WorkerContract } from "./queue";
 import { Response, RouteOptions, RouteContract, routerConfig, RouterFacade } from "./router";
-import { Job, Worker } from "bullmq";
+import { Job, QueueOptions, Worker } from "bullmq";
 import { Response as ExpressResponse, Request as ExpressRequest } from "express";
 import { getEnv, logCatchedError, logCatchedException } from "./helpers";
 
@@ -97,9 +97,8 @@ export class App {
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (workerClasses.length > 0) {
-                const promises: Promise<any>[] = [];
 
-                for (const [index, workerClass] of Object.entries(workerClasses)) {
+                for (const workerClass of workerClasses) {
                     const instance = new workerClass();
 
                     const queueName = instance.getQueueName();
@@ -109,9 +108,7 @@ export class App {
                         queue: queueName,
                     }));
 
-                    const queueOptions = {
-                        connection: instance.getOptions().connection
-                    };
+                    const queueOptions = instance.getOptions() as QueueOptions;
                     
                     QueueEngineFacade.bootQueue(queueName, queueOptions);
 
@@ -156,7 +153,7 @@ export class App {
                             resolve(workerClasses.length);
                         });
                     } else {
-                        resolve(workerClasses.length)
+                        resolve(workerClasses.length);
                     }
                 }
 
