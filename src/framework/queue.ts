@@ -112,7 +112,7 @@ export abstract class BaseWorker implements WorkerContract {
         Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.",
             this.getWorkerData(
                 job,
-                JSON.stringify(returnValue, null, 4)
+                returnValue
             )
         ));
         Logger.trace(JSON.stringify(job, null, 4));
@@ -193,6 +193,12 @@ export class QueueEngineFacade {
     }
 
     public static add(jobName: string, data: unknown): Promise<unknown> {
+        Logger.debug(Lang.__("Adding Job [{{job}}] to the queue [{{queue}}].", {
+            job: jobName,
+            queue: this.default || getEnv("APP_DEFAULT_QUEUE"),
+        }));
+        Logger.trace(JSON.stringify(data, null, 4));
+
         let backoff;
         if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
             backoff = {
