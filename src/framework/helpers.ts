@@ -18,13 +18,10 @@ export function logCatchedException(error?: {message?: string; stack?: string;})
     Logger.fatal("An unrecoverable error has occurred. Shutting down application.");
     process.exit(1);
 }
-export function logCatchedError(error?: {message?: string; stack?: string;}): void {
+export function logCatchedError(error?: {name?: string; message?: string; stack?: string;}): void {
     Logger.error(error?.message || Lang.__("No message provided for this error."));
-    if (getEnv("APP_MODE", "production") === "develop") {
-        Logger.trace(JSON.stringify(error, null, 4));
-    } else {
-        Logger.trace(error?.stack || Lang.__("No trace stack provided for this error."));
-    }
+    Logger.error(error?.stack || Lang.__("No trace stack provided for this error."));
+    Logger.trace(JSON.stringify(error, null, 4));
 }
 
 export function now(): Moment  {
