@@ -21,7 +21,9 @@ export function logCatchedException(error?: {message?: string; stack?: string;})
 export function logCatchedError(error?: {name?: string; message?: string; stack?: string;}): void {
     Logger.error(error?.message || Lang.__("No message provided for this error."));
     Logger.error(error?.stack || Lang.__("No trace stack provided for this error."));
-    Logger.trace(JSON.stringify(error, null, 4));
+    if (getEnv("APP_MODE") === "develop") {
+        Logger.error(JSON.stringify(error, null, 4));
+    }
 }
 
 export function now(): Moment  {
