@@ -44,11 +44,11 @@
     "chai": "^4.3.4",
     "eslint": "^7.30.0",
     "faker": "^5.5.3",
-    "mocha": "^9.0.2",
+    "mocha": "^8.4.0",
     "nexe": "^4.0.0-beta.18",
     "nodemon": "^2.0.12",
     "nyc": "^15.1.0",
-    "ts-node": "^10.1.0",
+    "ts-node": "^9.1.1",
     "typescript": "^4.3.5"
   },
   "nodemonConfig": {
