@@ -9,7 +9,8 @@
   },
   "main": "./build/server.js",
   "scripts": {
-    "serve": "nodemon server.ts",
+    "serve:dev": "nodemon server.ts",
+    "serve": "ts-node --transpile-only ./server.ts",
     "build": "tsc --project ./ && nexe ./build/**/* -o ./app.exe --verbose",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
