@@ -10,7 +10,7 @@
   "main": "./build/server.js",
   "scripts": {
     "serve:dev": "SET NODE_ENV=development && nodemon server.ts",
-    "serve:compile": "npm run compile && SET NODE_ENV=compiled && node ./build/server.js",
+    "serve:compiled": "npm run compile && SET NODE_ENV=compiled && node ./build/server.js",
     "serve": "SET NODE_ENV=production && ts-node --transpile-only ./server.ts",
     "compile": "tsc --project ./",
     "build": "npm run compile && nexe ./build/**/* -o ./app.exe --verbose",

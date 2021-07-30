@@ -2,6 +2,9 @@ node_modules
 build/
 npm-debug.log
 .env
+.env.production
+.env.development
+.env.compiled
 .DS_Store
 logs
 assets/

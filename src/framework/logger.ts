@@ -113,7 +113,7 @@ export class Logger {
                 for (const instance of Logger.instances) {
                     if (instance.can) {
                         instance.driver
-                            .log(`[${date}] | ${level.name.padEnd(5, " ")} | ${msg}`, level)
+                            .log(`[${date}] | ${level.name.toUpperCase().padEnd(5, " ")} | ${msg}`, level)
                             .then(resolve)
                             .catch(logCatchedError)
                         ;
