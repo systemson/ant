@@ -9,9 +9,28 @@ import { Lang } from "./lang";
  */
 export interface WorkerContract {
     /**
+     * The worker's concurrency ID.
+     */
+    id: number;
+
+    /**
      * Amount of jobs that a single worker is allowed to work on in parallel.
      */
     concurrency: number;
+
+    /**
+     * Sets the worker's concurrency ID.
+     * 
+     * @param id 
+     */
+    setId(id: number): void;
+
+    /**
+     * Gets the worker's concurrency ID.
+     * 
+     * @param id 
+     */
+    getId(): number;
 
     /**
      * Gets the queue name for the current worker.
@@ -38,7 +57,7 @@ export interface WorkerContract {
      */
     handleFailed(job: Job, failedReason: string): void
 
-    getWorkerData(job?: Job, data?: unknown): {name: string; queue: string, job?: string, id?: string; data?: string};
+    getWorkerData(job?: Job, data?: unknown, id?: number): {name: string; id: string, queue: string, jobName?: string, jobId?: string; data?: string};
 
     onCompleted(job: Job, returnValue: unknown): void;
     onProgress(job: Job, progress: number | unknown): void;
@@ -47,13 +66,23 @@ export interface WorkerContract {
 }
 
 export abstract class BaseWorker implements WorkerContract {
+    public id = 1;
+
     protected queueName!: string;
 
-    public concurrency = parseInt(getEnv("APP_QUEUE_CONCURRENCY", "1"));
+    public concurrency = parseInt(getEnv("APP_QUEUE_JOB_CONCURRENCY", "1"));
 
     public connection!: Redis;
 
     public abstract handler(job: Job): any;
+
+    public setId(id: number): void {
+        this.id = id;
+    }
+
+    public getId(): number {
+        return this.id;
+    }
 
     public getQueueName(): string {
         return this.queueName || getEnv("APP_DEFAULT_QUEUE", "default");
@@ -109,7 +138,7 @@ export abstract class BaseWorker implements WorkerContract {
     }
 
     public onCompleted(job: Job, returnValue: unknown): void {
-        Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}:{{queue}}]. Returning: {{{data}}}.",
+        Logger.debug(Lang.__("Job [{{job}}#{{id}}] successfully completed on [{{name}}(#{{id}}):{{queue}}]. Returning: {{{data}}}.",
             this.getWorkerData(
                 job,
                 returnValue
@@ -124,7 +153,7 @@ export abstract class BaseWorker implements WorkerContract {
     }
 
     public onFailed(job: Job, failedReason: Error): void {
-        Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}:{{queue}}].",
+        Logger.error(Lang.__("Job [{{job}}#{{id}}] failed on [{{name}}(#{{id}}):{{queue}}].",
             this.getWorkerData(
                 job
             )
@@ -138,15 +167,16 @@ export abstract class BaseWorker implements WorkerContract {
     }
 
     public onDrained(): void {
-        Logger.audit(Lang.__("Queue [{{name}}:{{queue}}] is empty.", this.getWorkerData()));
+        Logger.audit(Lang.__("Queue [{{name}}(#{{id}}):{{queue}}] is empty.", this.getWorkerData()));
     }
     
-    public getWorkerData(job?: Job, data?: unknown): {name: string; queue: string, job?: string, id?: string; data?: string} {
+    public getWorkerData(job?: Job, data?: unknown): {name: string; id: string; queue: string, jobName?: string, jobId?: string; data?: string} {
         return {
-            job: job?.name,
-            id: job?.id?.toString() as string,
             name: this.constructor.name,
+            id: this.getId().toString(),
             queue: this.getQueueName(),
+            jobName: job?.name,
+            jobId: job?.id?.toString() as string,
             data: JSON.stringify(data),
         };
     }
@@ -208,7 +238,7 @@ export class QueueEngineFacade {
         }
 
         return QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
-            removeOnComplete: true,
+            removeOnComplete: getEnv("APP_QUEUE_REMOVE_COMPLETED") === "true",
             attempts: parseInt(getEnv("APP_QUEUE_RETRIES", "3")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
             backoff: backoff,

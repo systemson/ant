@@ -1,14 +1,18 @@
 import fs from "fs";
-if (!fs.existsSync(".env")) {
-    throw new Error("No environment variables file [.env] found.");
-}
 
 import { Lang } from "./lang";
 import dotenv from "dotenv";
 import { Logger } from "./logger";
-dotenv.config();
 import moment, { Moment } from "moment";
 
+if (fs.existsSync(`.env.${process.env.NODE_ENV}`) && !fs.existsSync(".env")) {
+    throw new Error("No environment variables file [.env] found.");
+}
+if (process.env.NODE_ENV && fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
+    dotenv.config({ path:  `.env.${process.env.NODE_ENV}`});
+} else {
+    dotenv.config();
+}
 export function getEnv(key: string, fallback?: string): string {
     return process.env[key] || fallback || "";
 }

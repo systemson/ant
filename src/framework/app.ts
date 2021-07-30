@@ -99,61 +99,66 @@ export class App {
             if (workerClasses.length > 0) {
 
                 for (const workerClass of workerClasses) {
-                    const instance = new workerClass();
+                    for (let id = 0; id < parseInt(getEnv("APP_QUEUE_WORKERS_CONCURRENCY", "1")); id++) {
+                        const instance = new workerClass();
+                        instance.setId(id + 1);
 
-                    const queueName = instance.getQueueName();
-        
-                    Logger.audit(Lang.__("Preparing worker [{{name}}:{{queue}}].", {
-                        name: instance.constructor.name,
-                        queue: queueName,
-                    }));
+                        const queueName = instance.getQueueName();
+            
+                        Logger.audit(Lang.__("Preparing worker [{{name}}(#{{id}}):{{queue}}].", {
+                            name: instance.constructor.name,
+                            queue: queueName,
+                            id: instance.getId().toString()
+                        }));
 
-                    const queueOptions = instance.getOptions() as QueueOptions;
-                    
-                    QueueEngineFacade.bootQueue(queueName, queueOptions);
+                        const queueOptions = instance.getOptions() as QueueOptions;
+                        
+                        QueueEngineFacade.bootQueue(queueName, queueOptions);
 
-                    const concrete = new Worker(
-                        queueName,
-                        (job: Job) => {
-                            Logger.debug(Lang.__(
-                                "Handling job [{{job}}#{{id}}] on [{{name}}:{{queue}}].",
-                                instance.getWorkerData(job)
-                            ));
+                        const concrete = new Worker(
+                            queueName,
+                            (job: Job) => {
+                                Logger.debug(Lang.__(
+                                    "Handling job [{{jobName}}#{{jobId}}] on [{{name}}:{{queue}}].",
+                                    instance.getWorkerData(job)
+                                ));
 
-                            Logger.trace(JSON.stringify(job, null, 4));
+                                Logger.trace(JSON.stringify(job, null, 4));
 
-                            return instance.handler(job);
-                        },
-                        instance.getOptions()
-                    );
+                                return instance.handler(job);
+                            },
+                            instance.getOptions()
+                        );
 
-                    concrete.on("completed", (job: Job, returnValue: unknown) => {
-                        instance.onCompleted(job, returnValue);
-                    });
-
-                    concrete.on("progress", (job: Job<any, any, string>, progress: unknown) => {
-                        instance.onProgress(job, progress);
-                    });
-
-                    concrete.on("failed", (job: Job, failedReason: Error) => {
-                        instance.onFailed(job, failedReason);
-                    });
-
-                    concrete.on("drained", () => instance.onDrained());
-
-                    concrete.on("error", logCatchedError);
-        
-                    Logger.audit(Lang.__("Worker [{{name}}:{{queue}}] is ready.", {
-                        name: instance.constructor.name,
-                        queue: queueName,
-                    }));
-
-                    if (getEnv("APP_QUEUE_REMOVE_FAILED_ON_START") === "true") {
-                        QueueEngineFacade.getInstance(queueName).clean(5 * 60 * 1000, 0, "failed").then(() => {
-                            resolve(workerClasses.length);
+                        concrete.on("completed", (job: Job, returnValue: unknown) => {
+                            instance.onCompleted(job, returnValue);
                         });
-                    } else {
-                        resolve(workerClasses.length);
+
+                        concrete.on("progress", (job: Job, progress: unknown) => {
+                            instance.onProgress(job, progress);
+                        });
+
+                        concrete.on("failed", (job: Job, failedReason: Error) => {
+                            instance.onFailed(job, failedReason);
+                        });
+
+                        concrete.on("drained", () => instance.onDrained());
+
+                        concrete.on("error", logCatchedError);
+
+                        Logger.audit(Lang.__("Worker [{{name}}(#{{id}}):{{queue}}] is ready.", {
+                            name: instance.constructor.name,
+                            queue: queueName,
+                            id: instance.getId().toString()
+                        }));
+
+                        if (getEnv("APP_QUEUE_REMOVE_FAILED_ON_START") === "true") {
+                            QueueEngineFacade.getInstance(queueName).clean(5 * 60 * 1000, 0, "failed").then(() => {
+                                resolve(workerClasses.length);
+                            });
+                        } else {
+                            resolve(workerClasses.length);
+                        }
                     }
                 }
 
@@ -230,12 +235,14 @@ export class App {
                         })
                         .catch(logCatchedException)
                     ;
+
+                    Logger.info(Lang.__("[{{name}}] microservice running.", { name: getEnv("APP_NAME") }));
+                    resolve();
                 }).catch(logCatchedException);
 
             } catch (error) {
                 rejects(error);
             }
-            resolve();
         });
     }
 }
