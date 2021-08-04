@@ -12,6 +12,7 @@ import { UserListRoute } from "./routes/users_list.route";
 import RouterProvider from "./providers/router.provider";
 import { TestWorkerRoute } from "./routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
+import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
 
 export class Boostrap {
 
@@ -35,6 +36,7 @@ export class Boostrap {
         InfoRoute,
         UserListRoute,
         TestWorkerRoute,
+        JobsMonitorRoute,
     ];
 
     /**

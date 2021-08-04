@@ -15,7 +15,7 @@ export class TestWorkerRoute extends BaseRoute {
         if (!["completed", "failed"].includes(status)) {
             return response().error({
                 status: Lang.__("failed"),
-                messaje: Lang.__("Status [{{status}}] not supported. Supported statuses allowed [completed], [failed].", {
+                messaje: Lang.__("Status [{{status}}] not supported. Statuses allowed: [completed, failed].", {
                     status: status,
                 }),
             });
