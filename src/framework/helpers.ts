@@ -1,15 +1,16 @@
 import fs from "fs";
-
 import { Lang } from "./lang";
 import dotenv from "dotenv";
 import { Logger } from "./logger";
 import moment, { Moment } from "moment";
 
-if (fs.existsSync(`.env.${process.env.NODE_ENV}`) && !fs.existsSync(".env")) {
-    throw new Error("No environment variables file [.env] found.");
+const NODE_ENV = process.env.NODE_ENV?.trim();
+
+if (!fs.existsSync(`.env.${NODE_ENV}`) && !fs.existsSync(".env")) {
+    throw new Error(`No environment variables file [.env or .env.${NODE_ENV}] found.`);
 }
-if (process.env.NODE_ENV && fs.existsSync(`.env.${process.env.NODE_ENV}`)) {
-    dotenv.config({ path:  `.env.${process.env.NODE_ENV}`});
+if (process.env.NODE_ENV && fs.existsSync(`.env.${NODE_ENV}`)) {
+    dotenv.config({ path:  `.env.${NODE_ENV}`});
 } else {
     dotenv.config();
 }
