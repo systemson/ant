@@ -19,15 +19,15 @@ export class JobsMonitorRoute extends BaseRoute {
             statuses = [statusName];
         } else {
             statuses = [
-               "completed",
-               "failed",
-               "delayed",
-               "repeat",
-               "waiting-children",
-               "active",
-               "wait",
-               "paused",
-           ];
+                "completed",
+                "failed",
+                "delayed",
+                "repeat",
+                "waiting-children",
+                "active",
+                "wait",
+                "paused",
+            ];
         }
 
         if (queueName) {
@@ -37,13 +37,13 @@ export class JobsMonitorRoute extends BaseRoute {
             queue = QueueEngineFacade.getInstance(getEnv("APP_DEFAULT_QUEUE"));
         }
 
-        let result: any = {};
+        const result: any = {};
 
         for (const status of statuses) {
             result[status] = {
                 jobs: await queue.getJobs(status),
                 total: await queue.getJobCountByTypes(status),
-            }
+            };
         }
 
         return response(result);

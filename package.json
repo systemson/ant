@@ -25,6 +25,7 @@
     "axios": "^0.21.1",
     "bullmq": "^1.40.1",
     "dotenv": "^8.6.0",
+    "dotenv-expand": "^5.1.0",
     "express": "^4.17.1",
     "i18n": "^0.13.3",
     "ioredis": "^4.27.7",
@@ -58,7 +59,10 @@
     "watch": [
       "server.ts",
       "src/*",
-      ".env"
+      ".env",
+      ".env.development",
+      ".env.compiled",
+      ".env.production"
     ],
     "ignore": [
       "assets/*",

@@ -1,6 +1,7 @@
 import fs from "fs";
 import { Lang } from "./lang";
 import dotenv from "dotenv";
+import dotenvExpand from "dotenv-expand";
 import { Logger } from "./logger";
 import moment, { Moment } from "moment";
 
@@ -10,14 +11,13 @@ if (!fs.existsSync(`.env.${NODE_ENV}`) && !fs.existsSync(".env")) {
     throw new Error(`No environment variables file [.env or .env.${NODE_ENV}] found.`);
 }
 if (process.env.NODE_ENV && fs.existsSync(`.env.${NODE_ENV}`)) {
-    dotenv.config({ path:  `.env.${NODE_ENV}`});
+    dotenvExpand(dotenv.config({ path:  `.env.${NODE_ENV}`}));
 } else {
-    dotenv.config();
+    dotenvExpand(dotenv.config());
 }
 export function getEnv(key: string, fallback?: string): string {
     return process.env[key] || fallback || "";
 }
-
 export function logCatchedException(error?: {message?: string; stack?: string;}): void {
     logCatchedError(error);
     Logger.fatal("An unrecoverable error has occurred. Shutting down application.");

@@ -1,7 +1,10 @@
 import IORedis, { Redis } from "ioredis";
-import { getEnv, logCatchedError, logCatchedException } from "./helpers";
+import { getEnv, logCatchedError, logCatchedException, now } from "./helpers";
 import { Lang } from "./lang";
 import { Logger } from "./logger";
+import fs from "fs";
+import path from "path";
+import crypto from "crypto";
 
 export interface CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void>;
@@ -9,6 +12,84 @@ export interface CacheDriverContract {
     get(key: string, def?: unknown): Promise<any>;
     unset(key: string): Promise<void>;
 }
+
+export class FilesystemChacheDriver implements CacheDriverContract {
+    public constructor(
+        public baseDir: string
+    ) {
+        this.initFilesystem();
+    }
+
+    private initFilesystem() {
+        if (!fs.existsSync(this.baseDir)){
+            fs.mkdirSync(this.baseDir, { recursive: true });
+        }
+    }
+
+    set(key: string, value: unknown, ttl?: number): Promise<void> {
+        return new Promise((resolve) => {
+            resolve(
+                fs.writeFileSync(
+                    this.getRealKey(key),
+                    this.encode({
+                        data: value,
+                        until: now().unix() + (ttl || 0),
+                    })
+                )
+            );
+        });
+    }
+
+    has(key: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const token = this.getFileData(key);
+            if (JSON.parse(token)?.created || 0 >= now().unix()) {
+                resolve(true);
+            } else {
+                this.unset(key);
+                resolve(false);
+            }
+        });
+    }
+
+    get(key: string, def?: unknown): Promise<any> {
+        return new Promise((resolve) => {
+            resolve((this.decode(this.getFileData(key)) as any)?.data || def);
+        });
+    }
+
+    unset(key: string): Promise<void> {
+        return new Promise((resolve) => {
+            const path = this.getRealKey(key);
+            if (fs.existsSync(path)) {
+                fs.unlinkSync(path);
+            }
+
+            resolve();
+        });
+    }
+
+    protected getRealKey(key: string): string {
+        return path.join(this.baseDir, crypto.createHash("sha256").update(key).digest("hex"));
+    }
+
+    protected getFileData(key: string): string {
+        try {
+            return fs.readFileSync(this.getRealKey(key)).toString("utf-8");
+        } catch (error) {
+            return JSON.stringify("");
+        }
+    }
+
+    protected encode(data: unknown): string {
+        return JSON.stringify(data);
+    }
+
+    protected decode(data: string): unknown {
+        return JSON.parse(data);
+    }
+}
+
 
 export type RedisConfigContract = {
     port: number;
@@ -41,7 +122,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void> {
         this.initRedis();
         return new Promise((resolve, reject) => {
-            this.client.set(this.getRealKey(key), value as any, "px", ttl?.toString()).then(() => resolve(), reject);
+            this.client.set(this.getRealKey(key), JSON.stringify(value), "px", ttl?.toString()).then(() => resolve(), reject);
         });
     }
 
@@ -57,9 +138,9 @@ export class RedisChacheDriver implements CacheDriverContract {
     get(key: string, def?: unknown): Promise<any> {
         this.initRedis();
         return new Promise((resolve, reject) => {
-            this.client.get(this.getRealKey(key)).then((value: unknown) => {
+            this.client.get(this.getRealKey(key)).then((value) => {
                 if (value) {
-                    resolve(value);
+                    resolve(JSON.parse(value));
                 } else {
                     resolve(def);
                 }
@@ -77,7 +158,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     }
 
     protected getRealKey(key: string): string {
-        return `${getEnv("APP_CACHE_PREFIX")}${key}`;
+        return `${getEnv("APP_REDIS_CACHE_PREFIX")}${key}`;
     }
 }
 
