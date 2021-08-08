@@ -41,7 +41,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void> {
         this.initRedis();
         return new Promise((resolve, reject) => {
-            this.client.set(this.getRealKey(key), value as any, "ex", ttl).then(() => resolve(), reject);
+            this.client.set(this.getRealKey(key), value as any, "px", ttl?.toString()).then(() => resolve(), reject);
         });
     }
 
@@ -112,17 +112,18 @@ export class CacheFacade {
         });
     }
 
-    public static call(key: string, callback: () => any, ttl?: number): Promise<any> {
+    public static call(key: string, callback: Promise<any>, ttl?: number): Promise<any> {
         return new Promise((resolve, reject) => {
             this.driver.has(key).then((has: boolean) => {
                 if (!has) {
-                    const value = callback();
-                    this.driver.set(key, value, ttl).then(() => {
-                        this.driver.get(key).then(resolve, reject);
+                    callback.then(value => {
+                        this.driver.set(key, value, ttl).then(() => {
+                            this.driver.get(key).then(resolve, reject);
+                        });
                     });
+                } else {
+                    this.driver.get(key).then(resolve, reject);
                 }
-
-                this.driver.get(key).then(resolve, reject);
             });
         });
     }
