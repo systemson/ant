@@ -33,7 +33,7 @@ export class FilesystemChacheDriver implements CacheDriverContract {
                     this.getRealKey(key),
                     this.encode({
                         data: value,
-                        until: now().unix() + (ttl || 0),
+                        until: parseInt(now().format("x")) + (ttl || 0),
                     })
                 )
             );
@@ -42,13 +42,17 @@ export class FilesystemChacheDriver implements CacheDriverContract {
 
     has(key: string): Promise<boolean> {
         return new Promise((resolve) => {
-            const token = this.getFileData(key);
-            if (JSON.parse(token)?.created || 0 >= now().unix()) {
-                resolve(true);
+            if (fs.existsSync(this.getRealKey(key))) {
+                const token = this.decode(this.getFileData(key)) as any;
+                if (token.until && token.until >= parseInt(now().format("x"))) {
+                    resolve(true);
+                } else {
+                    this.unset(key).then(() => resolve(false));
+                }
             } else {
-                this.unset(key);
                 resolve(false);
             }
+
         });
     }
 
