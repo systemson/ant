@@ -13,6 +13,7 @@ import RouterProvider from "./providers/router.provider";
 import { TestWorkerRoute } from "./routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
 import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
+import { TasaRoute } from "./routes/tasa.route";
 
 export class Boostrap {
 
@@ -34,9 +35,10 @@ export class Boostrap {
     public routes:  (new() => RouteContract)[] = [
         HomeRoute,
         InfoRoute,
-        UserListRoute,
-        TestWorkerRoute,
-        JobsMonitorRoute,
+        //UserListRoute,
+        //TestWorkerRoute,
+        //JobsMonitorRoute,
+        TasaRoute
     ];
 
     /**
