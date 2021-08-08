@@ -6,6 +6,6 @@ npm-debug.log
 .env.development
 .env.compiled
 .DS_Store
-logs
+storage/
 assets/
 app.exe

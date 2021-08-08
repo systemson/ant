@@ -3,15 +3,14 @@ import { getEnv } from "../framework/helpers";
 import fs from "fs";
 
 export default class FileDirectoryProvider extends ServiceProvider {
-    protected logDir = getEnv("APP_FILE_LOG_DIR");
-
     boot(): Promise<void> {
         return new Promise((resolve) => {
-            if (!fs.existsSync(this.logDir)){
-                fs.mkdirSync(this.logDir);
+            const logDir = getEnv("APP_FILE_LOG_DIR");
+            if (!fs.existsSync(logDir)){
+                fs.mkdirSync(logDir, { recursive: true });
             }
             if (!fs.existsSync("assets")){
-                fs.mkdirSync("assets");
+                fs.mkdirSync("assets", { recursive: true });
             }
 
             resolve();
