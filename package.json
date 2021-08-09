@@ -13,7 +13,7 @@
     "serve:compiled": "npm run compile && SET NODE_ENV=compiled && node ./build/server.js",
     "serve": "SET NODE_ENV=production && ts-node --transpile-only ./server.ts",
     "compile": "tsc --project ./",
-    "build": "npm run compile && SET NODE_ENV=compiled && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
+    "build": "npm run compile && NODE_ENV=compiled pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "mocha",
