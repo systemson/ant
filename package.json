@@ -9,11 +9,11 @@
   },
   "main": "./build/server.js",
   "scripts": {
-    "serve:dev": "SET NODE_ENV=development && nodemon server.ts",
-    "serve:compiled": "npm run compile && SET NODE_ENV=compiled && node ./build/server.js",
     "serve": "SET NODE_ENV=production && ts-node --transpile-only ./server.ts",
-    "compile": "tsc --project ./",
-    "build": "npm run compile && NODE_ENV=compiled pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
+    "serve:dev": "SET NODE_ENV=development && nodemon server.ts",
+    "build": "tsc --project ./",
+    "start": "npm run build && SET NODE_ENV=compiled && node ./build/server.js",
+    "compile": "npm run build && SET NODE_ENV=compiled && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "mocha",
@@ -55,9 +55,6 @@
     "pkg": "^5.3.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5"
-  },
-  "engines": {
-    "node": "12.x"
   },
   "nodemonConfig": {
     "watch": [
