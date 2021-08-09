@@ -11,7 +11,7 @@ export function routerConfig(): RouterConfig {
     return {
         scheme: getEnv("APP_REST_SERVER_SCHEME", "http"),
         host: getEnv("APP_REST_SERVER_HOST", "localhost"),
-        port: getEnv("APP_REST_SERVER_PORT", "3200"),
+        port: process.env.PORT || getEnv("APP_REST_SERVER_PORT", "3200"),
     };
 }
 
