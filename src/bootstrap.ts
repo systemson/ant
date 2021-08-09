@@ -26,7 +26,7 @@ export class Boostrap {
         LogProvider,
         CacheProvider,
         RouterProvider,
-        DatabaseProvider
+        //DatabaseProvider
     ];
 
     /**
@@ -45,6 +45,6 @@ export class Boostrap {
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        TestWorker
+        //TestWorker
     ];
 }
