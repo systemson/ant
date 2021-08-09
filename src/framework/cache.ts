@@ -96,6 +96,7 @@ export class FilesystemChacheDriver implements CacheDriverContract {
 
 
 export type RedisConfigContract = {
+    url?: string;
     port: number;
     host: string;
     password: string;
@@ -108,9 +109,13 @@ export class RedisChacheDriver implements CacheDriverContract {
 
     private initRedis() {
         if (this.client === undefined) {
-            this.client = new IORedis(this.config.port, this.config.host, {
-                password: this.config.password
-            });
+            if (this.config.url) {
+                this.client = new IORedis(this.config.url);
+            } else {
+                this.client = new IORedis(this.config.port, this.config.host, {
+                    password: this.config.password
+                });
+            }
 
             this.client.on("error", (error) => {
                 Logger.error(Lang.__("Could not connect to redis server on [{{host}}:{{port}}].", {
