@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import dotenvExpand from "dotenv-expand";
 import { Logger } from "./logger";
 import moment, { Moment } from "moment";
+import { info } from "console";
 
 const NODE_ENV = process.env.NODE_ENV?.trim();
 
@@ -54,7 +55,7 @@ export const DATE_FORMAT: TIME_FORMAT = "YYYY-MM-DD";
 export const HOUR_FORMAT: TIME_FORMAT = "HH:mm:ss.SSS";
 
 export function sleep(ms: number): Promise<void> {
-    Logger.fatal("Esperando " + ms);
+    Logger.debug("Esperando " + ms);
     return new Promise((resolve) => {
         setTimeout(resolve, ms, [ms]);
     });
@@ -63,3 +64,8 @@ export function sleep(ms: number): Promise<void> {
 export function dummyCallback(...any: unknown[]): void {
     //
 }
+
+process.on('SIGINT', () => {
+    Logger.info("Gracefully shutting down the application.");
+    process.exit(0);
+});
