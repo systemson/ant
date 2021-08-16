@@ -113,13 +113,13 @@ export default class DatabaseProvider extends ServiceProvider {
                 password: getEnv("DB_PASSWORD", "postgres"),
                 database: getEnv("DB_DATABASE"),
                 schema:  getEnv("DB_SCHEMA", "public"),
-                entities: NODE_ENV === "compiled" ? [path.join(cwd(), "build", "src", "models/**/*.js")] : [path.join(cwd(), "src", "models/**/*.ts")],
+                entities: NODE_ENV === "compiled" ? [path.join(__dirname, "/../../", "src", "models/**/*.js")] : [path.join(cwd(), "src", "models/**/*.ts")],
                 entityPrefix: getEnv("BD_PREFIX"),
                 synchronize: false,
                 dropSchema: false,
                 namingStrategy: new SnakeCaseNamingStrategy(),
                 logging: false,
-                // logger: new CustomLogger(),
+                logger: getEnv("BD_DEBUG") === "true" ?  new CustomLogger() : undefined,
             }).then((connection) => {
                 OrmFacade.orm = connection;
                 resolve();
