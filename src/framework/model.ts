@@ -13,7 +13,7 @@ type PaginatedResponse<T extends BaseEntity> = {
 }
 
 export class Model extends BaseEntity  {
-    static async paginate<T extends BaseEntity>(req: Request): Promise<PaginatedResponse<T>> {
+    static async paginate<T extends BaseEntity>(this: new () => T, req: Request): Promise<PaginatedResponse<T>> {
         const query = req.query;
 
         const perPage = parseInt(query?.per_page as string) || 20;
@@ -21,7 +21,7 @@ export class Model extends BaseEntity  {
         const skip = perPage * (page - 1);
         const from = skip + 1;
         const to = skip + perPage;
-        const conditionKeys = Object.keys(query).filter(key => this.getColumns().includes(key));
+        const conditionKeys = Object.keys(query).filter(key => (this as any).getColumns().includes(key));
 
         const contidions: ParsedQs = {};
 
@@ -29,15 +29,26 @@ export class Model extends BaseEntity  {
             contidions[key] = query[key];
         }
 
+        let orderBy = undefined;
+
+        if (query.order_by) {
+            const orderByArray = (query.order_by as string).split(",").map(order => {
+                const result = order.split(":");
+                let ret: any = {};
+                ret[(result[0] as string)] = result[1] || "ASC";
+                return ret;
+            });
+
+            orderBy = Object.assign({}, ...orderByArray);
+        }
+
         const options: FindManyOptions<T> = {
             take: perPage,
             skip: skip,
             select: (query.select as string)?.split(",") as (keyof T)[],
             where: contidions,
-            //order: 
+            order: orderBy,
         };
-        
-        console.log(contidions);
         
         const data = await (this as any)
             .getRepository()
