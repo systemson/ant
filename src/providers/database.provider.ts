@@ -1,11 +1,13 @@
 import { ServiceProvider } from "../framework/service_provider";
-import { getEnv, logCatchedException } from "../framework/helpers";
+import { getEnv, Lang, logCatchedException, NODE_ENV, timestamp } from "../framework/helpers";
 import { OrmFacade } from "../framework/orm_facade";
-import { Logger } from "../framework/logger";
-import { Lang } from "../framework/lang";
+import { ConsoleLogger, Logger } from "../framework/logger";
 import { createConnection } from "typeorm";
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
 import { snakeCase } from "typeorm/util/StringUtils";
+import path from "path";
+import { cwd } from "process";
+import {Logger as TypeOrmLogContract} from "typeorm";
 
 export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
     tableName(className: string, customName: string): string {
@@ -65,9 +67,44 @@ export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements Na
     }
 }
 
+export class CustomLogger implements TypeOrmLogContract {
+    protected logger = new ConsoleLogger();
+    protected timestamp = timestamp;
+
+    logQuery(query: string, parameters?: any[]): void {
+        const date = this.timestamp();
+        this.logger.log(query, "audit", date);
+        this.logger.log(JSON.stringify(parameters), "audit", date);
+    }
+    logQueryError(error: string | Error, query: string, parameters?: any[]): void {
+        const date = this.timestamp();
+        this.logger.log(JSON.stringify(error), "audit", date);
+        this.logger.log(query, "audit", date);
+        this.logger.log(JSON.stringify(parameters), "audit", date);
+    }
+    logQuerySlow(time: number, query: string, parameters?: any[]): void {
+        const date = this.timestamp();
+        this.logger.log(time.toString(), "audit", date);
+        this.logger.log(query, "audit", date);
+        this.logger.log(JSON.stringify(parameters), "audit", date);
+    }
+    logSchemaBuild(message: string): void {
+        const date = this.timestamp();
+        this.logger.log(message, "audit", date);
+    }
+    logMigration(message: string): void {
+        const date = this.timestamp();
+        this.logger.log(message, "audit", date);
+    }
+    log(level: "warn" | "info" | "log", message: string): void {
+        const date = this.timestamp();
+        this.logger.log(message, "audit", date);
+    }
+}
+
 export default class DatabaseProvider extends ServiceProvider {
     boot(): Promise<void> {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             createConnection({
                 type: getEnv("DB_TYPE", "postgres") as any,
                 host: getEnv("DB_HOST", "localhost"),
@@ -76,19 +113,17 @@ export default class DatabaseProvider extends ServiceProvider {
                 password: getEnv("DB_PASSWORD", "postgres"),
                 database: getEnv("DB_DATABASE"),
                 schema:  getEnv("DB_SCHEMA", "public"),
-                entities: getEnv("APP_MODE", "develop") === "compiled" ? ["./build/src/models/**/*.js"] : ["./src/models/**/*.ts"],
+                entities: NODE_ENV === "compiled" ? [path.join(cwd(), "build", "src", "models/**/*.js")] : [path.join(cwd(), "src", "models/**/*.ts")],
                 entityPrefix: getEnv("BD_PREFIX"),
                 synchronize: false,
                 dropSchema: false,
                 namingStrategy: new SnakeCaseNamingStrategy(),
+                logging: false,
+                // logger: new CustomLogger(),
             }).then((connection) => {
-                resolve();
-
                 OrmFacade.orm = connection;
-                Logger.audit(Lang.__("ORM [{{name}}] started.", {
-                    name: "TypeORM",
-                }));
-            })
+                resolve();
+            }, reject)
                 .catch((error) => {
                     Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}].", {
                         host: getEnv("DB_HOST", "localhost"),

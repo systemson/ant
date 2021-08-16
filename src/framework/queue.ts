@@ -1,8 +1,8 @@
 import { Job, Queue, QueueOptions, QueueScheduler, QueueSchedulerOptions, WorkerOptions  } from "bullmq";
-import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
+import { dummyCallback, getEnv, Lang, logCatchedError, logCatchedException } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 import { Logger } from "./logger";
-import { Lang } from "./lang";
+import { snakeCase } from "typeorm/util/StringUtils";
 
 /**
  * The Worker base interface
@@ -123,7 +123,7 @@ export abstract class BaseWorker implements WorkerContract {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
             connection: this.getConnection(),
-            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
+            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
         };
 
         return options;
@@ -267,7 +267,7 @@ export class QueueEngineFacade {
 
         return {
             connection: redis,
-            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
+            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
         };
     }
 }
