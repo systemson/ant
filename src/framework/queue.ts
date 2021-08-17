@@ -1,8 +1,8 @@
-import { Job, Queue, QueueOptions, QueueScheduler, QueueSchedulerOptions, WorkerOptions  } from "bullmq";
-import { dummyCallback, getEnv, logCatchedError, logCatchedException } from "./helpers";
+import { Job, JobsOptions, Queue, QueueOptions, QueueScheduler, QueueSchedulerOptions, RepeatOptions, WorkerOptions  } from "bullmq";
+import { dummyCallback, getEnv, Lang, logCatchedError, logCatchedException, sleep } from "./helpers";
 import IORedis, { Redis } from "ioredis";
 import { Logger } from "./logger";
-import { Lang } from "./lang";
+import { snakeCase } from "typeorm/util/StringUtils";
 
 /**
  * The Worker base interface
@@ -123,7 +123,7 @@ export abstract class BaseWorker implements WorkerContract {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
             connection: this.getConnection(),
-            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
+            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
         };
 
         return options;
@@ -189,7 +189,7 @@ export class QueueEngineFacade {
 
     public static bootQueue(name: string, queueOptions?: QueueOptions): typeof QueueEngineFacade {
         if (!QueueEngineFacade.instances.has(name)) {
-            queueOptions = queueOptions || this.fallbackConfig();
+            queueOptions = queueOptions || this.fallbackQueueOptions();
 
             const queue = new Queue(name, queueOptions);
 
@@ -223,12 +223,30 @@ export class QueueEngineFacade {
     }
 
     public static add(jobName: string, data: unknown): Promise<unknown> {
-        Logger.debug(Lang.__("Adding Job [{{job}}] to the queue [{{queue}}].", {
+        return this.dispatch(jobName, data);
+    }
+
+    public static dispatch(jobName: string, data: unknown, jobOptions?: JobsOptions): Promise<unknown> {
+        Logger.debug(Lang.__("Dispatching Job [{{job}}] to queue [{{queue}}].", {
             job: jobName,
             queue: this.default || getEnv("APP_DEFAULT_QUEUE"),
         }));
-        Logger.trace(JSON.stringify(data, null, 4));
+        Logger.trace("Job data: " + JSON.stringify(data, null, 4));
 
+        return QueueEngineFacade.getInstance(
+            this.default || getEnv("APP_DEFAULT_QUEUE")
+        ).add(
+            jobName,
+            data,
+            this.jobOptions(jobOptions)
+        );
+    }
+
+    public static repeat(jobName: string, data: unknown, options: RepeatOptions): Promise<unknown>  {
+        return this.dispatch(jobName, data, this.jobOptions(options));
+    }
+    
+    private static jobOptions(options?: JobsOptions): JobsOptions {
         let backoff;
         if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
             backoff = {
@@ -237,15 +255,17 @@ export class QueueEngineFacade {
             };
         }
 
-        return QueueEngineFacade.getInstance(this.default || getEnv("APP_DEFAULT_QUEUE")).add(jobName, data, {
+        const baseOptions: JobsOptions = {
             removeOnComplete: getEnv("APP_QUEUE_REMOVE_COMPLETED") === "true",
             attempts: parseInt(getEnv("APP_QUEUE_RETRIES", "3")),
             removeOnFail: getEnv("APP_QUEUE_REMOVE_FAILED") === "true",
             backoff: backoff,
-        });
+        };
+
+        return Object.assign(baseOptions, options);
     }
-    
-    private static fallbackConfig(): QueueOptions {
+
+    private static fallbackQueueOptions(): QueueOptions {
         const config = {
             port: parseInt(getEnv("REDIS_PORT", "6379")),
             host: getEnv("REDIS_HOST", "localhost"),
@@ -267,8 +287,26 @@ export class QueueEngineFacade {
 
         return {
             connection: redis,
-            prefix: getEnv("APP_QUEUE_PREFIX", "micra"),
+            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
         };
+    }
+
+    public static stop(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            for (const instance of this.instances.values()) {
+                Logger.audit(Lang.__("Stoping queue [{{queue}}].", {
+                    queue: instance.name,
+                })).then(async () => {
+                    await instance.pause().then(async () => {
+                        while (await instance.getActiveCount() > 0) {
+                            await sleep(100);
+                        }
+                        resolve();
+                    });
+                });
+            
+            }
+        });
     }
 }
 

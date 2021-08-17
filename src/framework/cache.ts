@@ -1,10 +1,10 @@
 import IORedis, { Redis } from "ioredis";
-import { getEnv, logCatchedError, logCatchedException, now } from "./helpers";
-import { Lang } from "./lang";
+import { getEnv, Lang, logCatchedError, logCatchedException, now } from "./helpers";
 import { Logger } from "./logger";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { snakeCase } from "typeorm/util/StringUtils";
 
 export interface CacheDriverContract {
     set(key: string, value: unknown, ttl?: number): Promise<void>;
@@ -167,7 +167,7 @@ export class RedisChacheDriver implements CacheDriverContract {
     }
 
     protected getRealKey(key: string): string {
-        return `${getEnv("APP_REDIS_CACHE_PREFIX")}${key}`;
+        return `${snakeCase(getEnv("APP_REDIS_CACHE_PREFIX"))}${key}`;
     }
 }
 

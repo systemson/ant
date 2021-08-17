@@ -1,6 +1,5 @@
 import { BaseRoute, Method, response, Response } from "../framework/router";
-import { Lang } from "../framework/lang";
-import { getEnv } from "../framework/helpers";
+import { getEnv, Lang } from "../framework/helpers";
 
 export class HomeRoute extends BaseRoute {
     url = "/";
@@ -11,7 +10,7 @@ export class HomeRoute extends BaseRoute {
         return response({
             status: Lang.__("active"),
             message:  Lang.__("Welcome to the [{{name}}] microservice.", {
-                name: getEnv("APP_NAME", "Micra"),
+                name: getEnv("APP_NAME", "Ant"),
             }),
         });
     } 

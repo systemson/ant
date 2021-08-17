@@ -1,6 +1,6 @@
 import { BaseWorker } from "../framework/queue";
-import { Lang } from "../framework/lang";
 import { Job } from "bullmq";
+import { Lang } from "../framework/helpers";
 
 export class TestWorker extends BaseWorker {
     handler(job: Job): any {

@@ -1,8 +1,8 @@
 import { ServiceProvider } from "../framework/service_provider";
 import { Logger } from "../framework/logger";
-import { Lang } from "../framework/lang";
 import express from "express";
 import { routerConfig, RouterFacade } from "../framework/router";
+import { Lang } from "../framework/helpers";
 
 export default class RouterProvider extends ServiceProvider {
     boot(): Promise<void> {
