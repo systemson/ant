@@ -20,7 +20,7 @@ export class Boostrap {
      */
     public providers: (new() => ServiceProviderContract)[] = [
         LogProvider,
-        DatabaseProvider,
+        //DatabaseProvider,
         CacheProvider,
         RouterProvider,
     ];
