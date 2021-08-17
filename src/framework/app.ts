@@ -213,7 +213,7 @@ export class App {
         return new Promise((resolve, rejects) => {
             try {
                 this.bootProviders().then(async () => {
-                    Logger.info(Lang.__("Starting [{{name}}] microservice", { name: getEnv("APP_NAME") }));
+                    Logger.info(Lang.__("Starting [{{name}}] application.", { name: getEnv("APP_NAME") }));
 
                     Logger.audit(Lang.__("Routes set up started."));
                     await this.setRoutes(this.boostrap.routes)
@@ -239,7 +239,7 @@ export class App {
                         .catch(logCatchedException)
                     ;
 
-                    Logger.info(Lang.__("[{{name}}] microservice running.", { name: getEnv("APP_NAME") }));
+                    Logger.info(Lang.__("[{{name}}] application running.", { name: getEnv("APP_NAME") }));
                     Logger.audit(Lang.__("Node enviroment [{{env}}].", { env:  NODE_ENV }));
                     resolve();
                 }).catch(logCatchedException);
@@ -257,7 +257,8 @@ export class App {
      */
     public shutDown(): Promise<void> {
         return new Promise((resolve) => {
-            Logger.info("Gracefully shutting down the application.").then(resolve);
+            Logger.info("Gracefully shutting down the application.");
+            QueueEngineFacade.stop().then(resolve);
         });
     }
 }

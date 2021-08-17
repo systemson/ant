@@ -34,7 +34,7 @@ export class Model extends BaseEntity  {
         if (query.order_by) {
             const orderByArray = (query.order_by as string).split(",").map(order => {
                 const result = order.split(":");
-                let ret: any = {};
+                const ret: any = {};
                 ret[(result[0] as string)] = result[1] || "ASC";
                 return ret;
             });
