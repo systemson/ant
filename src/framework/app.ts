@@ -257,7 +257,7 @@ export class App {
      */
     public shutDown(): Promise<void> {
         return new Promise((resolve) => {
-            Logger.info("Gracefully shutting down the application.");
+            Logger.warn("Gracefully shutting down the application.");
             QueueEngineFacade.stop().then(resolve);
         });
     }

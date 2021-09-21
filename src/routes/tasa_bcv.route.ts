@@ -4,15 +4,15 @@ import { CacheFacade } from "../framework/cache";
 import cheerio, { CheerioAPI } from 'cheerio';
 import axios from "axios";
 
-export class TasaRoute extends BaseRoute {
-    url = "/tasa";
+export class TasaBCVRoute extends BaseRoute {
+    url = "/api/v1/tasas/bcv";
 
     method: Method = "get";
 
     handle(): Promise<Response> {
         return new Promise((resolve) => {
             CacheFacade.call(
-                "divisas",
+                "divisa_bcv",
                 new Promise((resolve) => {
                     const body = axios.get("http://www.bcv.org.ve").then(body => {
                         const $ = cheerio.load(body.data);
