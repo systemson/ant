@@ -33,7 +33,6 @@
     "@types/redis": "^2.8.31",
     "axios": "^0.21.1",
     "bullmq": "^1.40.4",
-    "cheerio": "^1.0.0-rc.10",
     "cors": "^2.8.5",
     "dotenv": "^8.6.0",
     "dotenv-expand": "^5.1.0",
