@@ -10,6 +10,8 @@ import { ServiceProviderContract } from "./service_provider";
 export class App {
     routes: Map<string, RouteOptions> = new Map();
 
+    public isRunning: boolean = false;
+
     constructor(
         protected boostrap: Boostrap,
     ) {
@@ -240,7 +242,10 @@ export class App {
                     ;
 
                     Logger.info(Lang.__("[{{name}}] application running.", { name: getEnv("APP_NAME") }));
+                    this.isRunning = true;
+
                     Logger.audit(Lang.__("Node enviroment [{{env}}].", { env:  NODE_ENV }));
+
                     resolve();
                 }).catch(logCatchedException);
 
@@ -257,8 +262,13 @@ export class App {
      */
     public shutDown(): Promise<void> {
         return new Promise((resolve) => {
-            Logger.warn("Gracefully shutting down the application.");
-            QueueEngineFacade.stop().then(resolve);
+            Logger.info("Gracefully shutting down the application.");
+
+            if (this.isRunning) {
+                QueueEngineFacade.stop().then(resolve);
+            } else {
+                resolve();
+            }
         });
     }
 }

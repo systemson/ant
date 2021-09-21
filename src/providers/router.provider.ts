@@ -3,13 +3,17 @@ import { Logger } from "../framework/logger";
 import express from "express";
 import { routerConfig, RouterFacade } from "../framework/router";
 import { Lang } from "../framework/helpers";
+import cors from 'cors';
 
 export default class RouterProvider extends ServiceProvider {
     boot(): Promise<void> {
         return new Promise((resolve) => {
             const router = express();
 
-            router.use(express.json());
+            router
+                .use(express.json())
+                .use(cors())
+            ;
 
             const config = routerConfig();
 
