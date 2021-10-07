@@ -1,6 +1,7 @@
 import { getEnv, logCatchedError, now, timestamp, today } from "./helpers";
 import fs from "fs";
 import { EOL } from "os";
+import { getConnection } from "typeorm";
 
 const LOG_COLORS = {
     danger: "\x1b[31m", // red
@@ -20,6 +21,8 @@ type LOG_LEVEL = {
 
 export interface LogDriverContract {
     log(msg: string, level: LOG_LEVEL_NAME, date: string): Promise<void>;
+
+    clear(): void;
 }
 
 export class ConsoleLogger implements LogDriverContract {
@@ -42,23 +45,28 @@ export class ConsoleLogger implements LogDriverContract {
             ));
         });
     }
+
+    public clear(): void {
+        //
+    }
 }
 
 export class FileLogger implements LogDriverContract {
+    protected fileName!: string;
     public constructor(
         public folder: string,
         public name: string,
         public dateFormat: string = "YYYY-MM-DD",
-    ) {}
+    ) {
+        this.fileName = `${this.name.toLowerCase()}-${today()}.log`;
+    }
 
     public log(msg: string, level: LOG_LEVEL_NAME, date: string): Promise<void> {
         this.init();
 
         return new Promise((resolve) => {
-            const fileName = `${this.name.toLowerCase()}-${today()}.log`;
-
             resolve(fs.appendFileSync(
-                `${this.folder}/${fileName}`,
+                `${this.folder}/${this.fileName}`,
                 `[${date}] | ${level.toUpperCase().padEnd(5, " ")} | ${msg}` + EOL
             ));
         });
@@ -68,6 +76,14 @@ export class FileLogger implements LogDriverContract {
         if (!fs.existsSync(this.folder)){
             fs.mkdirSync(this.folder, { recursive: true });
         }
+    }
+
+    public clear(): void {
+        const path = `${this.folder}/${this.fileName}`;
+        console.log(path);
+        console.log(getEnv("APP_FILE_LOG_DIR"));
+        
+        fs.truncateSync(path)
     }
 }
 
@@ -114,7 +130,7 @@ export class DatabaseLogger implements LogDriverContract {
 
             try {
                 await log.save();
-            } catch (error) {
+            } catch (error: any) {
 
                 if (this.checkTimeout()) {
                     this.isRunning = false;
@@ -133,6 +149,10 @@ export class DatabaseLogger implements LogDriverContract {
 
     protected unixTS(): number {
         return parseInt(now().format("x"));
+    }
+
+    public clear(): void {
+        return;
     }
 }
  type LoggerMessage = {
@@ -238,5 +258,13 @@ export class Logger {
 
     public static pushDriver(driver: LogDriverContract, can = true): void {
         this.instances.push({driver: driver, can: can});
+    }
+
+    public static clear(): void {
+        for (const instance of this.instances) {
+            console.log(instance.driver.constructor.name)
+            instance.driver.clear();
+            console.log(instance.driver.constructor.name)
+        }
     }
 }

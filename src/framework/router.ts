@@ -181,8 +181,16 @@ export class ResponseContainer implements Response {
     }
 }
 
-export function response(body?: unknown, code = 200, headers = {}): Response {
-    return (new ResponseContainer()).setData(body).setStatus(code).setHeaders(headers);
+export function response(
+    body?: unknown,
+    code = 200,
+    headers = {}
+): Response {
+    return (new ResponseContainer())
+        .setData(body)
+        .setStatus(code)
+        .setHeaders(headers)
+    ;
 }
 
 export abstract class BaseRoute implements RouteContract {

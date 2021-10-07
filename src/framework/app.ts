@@ -93,7 +93,7 @@ export class App {
     /**
      * @todo COULD be moved to a provider.
      * 
-     * @param workerClasses 
+     * @param workerClasses
      * @returns 
      */
     public setWorkers(workerClasses: (new() => WorkerContract)[]): Promise<number> {
@@ -185,6 +185,9 @@ export class App {
         Logger.audit(Lang.__("Service providers booting completed."));
     }
 
+    /**
+     *
+     */
     protected async bootNext(): Promise<void> {
         const providerClass = this.boostrap.providers.shift() as new() =>  ServiceProviderContract;
         const provider = new providerClass();
