@@ -261,17 +261,18 @@ export class App {
     /**
      * Gracefully shuts down the applicxations
      * 
-     * @todo SHOULD validate that no workers are running before shut down.
+     * @todo MUST validate that no workers are running before shut down.
      */
     public shutDown(): Promise<void> {
         return new Promise((resolve) => {
             Logger.info("Gracefully shutting down the application.");
-
+            resolve();
+/*
             if (this.isRunning) {
                 QueueEngineFacade.stop().then(resolve);
             } else {
-                resolve();
             }
+*/
         });
     }
 }

@@ -47,7 +47,7 @@ export class ConsoleLogger implements LogDriverContract {
     }
 
     public clear(): void {
-        //
+        console.clear();
     }
 }
 
@@ -80,10 +80,10 @@ export class FileLogger implements LogDriverContract {
 
     public clear(): void {
         const path = `${this.folder}/${this.fileName}`;
-        console.log(path);
-        console.log(getEnv("APP_FILE_LOG_DIR"));
-        
-        fs.truncateSync(path)
+
+        if (fs.existsSync(path)) {
+            fs.truncateSync(path)
+        }
     }
 }
 
@@ -94,6 +94,7 @@ export interface DatabaseLoggerProvider {
 
     save(): Promise<any>;
 }
+
 export class DatabaseLogger implements LogDriverContract {
     protected messages: DatabaseLoggerProvider[] = [];
     protected initTime: number;
@@ -262,9 +263,7 @@ export class Logger {
 
     public static clear(): void {
         for (const instance of this.instances) {
-            console.log(instance.driver.constructor.name)
             instance.driver.clear();
-            console.log(instance.driver.constructor.name)
         }
     }
 }
