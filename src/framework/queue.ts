@@ -85,7 +85,7 @@ export abstract class BaseWorker implements WorkerContract {
     }
 
     public getQueueName(): string {
-        return this.queueName || getEnv("APP_DEFAULT_QUEUE", "default");
+        return this.queueName || snakeCase(getEnv("APP_DEFAULT_QUEUE", "default"));
     }
 
     protected getConnection(): Redis {
@@ -123,7 +123,7 @@ export abstract class BaseWorker implements WorkerContract {
         const options: WorkerOptions = {
             concurrency: this.concurrency,
             connection: this.getConnection(),
-            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
+            prefix: snakeCase(getEnv("APP_QUEUE_GROUP", "ant")),
         };
 
         return options;
@@ -229,12 +229,12 @@ export class QueueEngineFacade {
     public static dispatch(jobName: string, data: unknown, jobOptions?: JobsOptions): Promise<unknown> {
         Logger.debug(Lang.__("Dispatching Job [{{job}}] to queue [{{queue}}].", {
             job: jobName,
-            queue: this.default || getEnv("APP_DEFAULT_QUEUE"),
+            queue: this.default || snakeCase(getEnv("APP_DEFAULT_QUEUE"))
         }));
         Logger.trace("Job data: " + JSON.stringify(data, null, 4));
 
         return QueueEngineFacade.getInstance(
-            this.default || getEnv("APP_DEFAULT_QUEUE")
+            this.default || snakeCase(getEnv("APP_DEFAULT_QUEUE"))
         ).add(
             jobName,
             data,
@@ -245,7 +245,7 @@ export class QueueEngineFacade {
     public static repeat(jobName: string, data: unknown, options: RepeatOptions): Promise<unknown>  {
         return this.dispatch(jobName, data, this.jobOptions(options));
     }
-    
+
     private static jobOptions(options?: JobsOptions): JobsOptions {
         let backoff;
         if (getEnv("APP_QUEUE_RETRY_STRATEGY", "none") !== "none") {
@@ -287,7 +287,7 @@ export class QueueEngineFacade {
 
         return {
             connection: redis,
-            prefix: snakeCase(getEnv("APP_QUEUE_PREFIX", "ant")),
+            prefix: snakeCase(getEnv("APP_QUEUE_GROUP", "ant")),
         };
     }
 
