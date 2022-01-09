@@ -101,7 +101,9 @@ export abstract class BaseWorker implements WorkerContract {
                 config.port,
                 config.host,
                 {
-                    password: config.password
+                    password: config.password,
+                    maxRetriesPerRequest: null,
+                    enableReadyCheck: false
                 }
             );
 
@@ -273,7 +275,9 @@ export class QueueEngineFacade {
         };
 
         const redis = new IORedis(config.port, config.host, {
-            password: config.password
+            password: config.password,
+            enableReadyCheck: false,
+            maxRetriesPerRequest: null,
         });
 
         redis.on("error", (error) => {
