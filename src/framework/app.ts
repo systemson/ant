@@ -216,9 +216,10 @@ export class App {
      */
     public boot(): Promise<void> {
         return new Promise((resolve, rejects) => {
+            Logger.info(Lang.__("Starting [{{name}}] application.", { name: getEnv("APP_NAME") }));
+
             try {
                 this.bootProviders().then(async () => {
-                    Logger.info(Lang.__("Starting [{{name}}] application.", { name: getEnv("APP_NAME") }));
 
                     Logger.audit(Lang.__("Routes set up started."));
                     await this.setRoutes(this.boostrap.routes)

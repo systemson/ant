@@ -15,15 +15,15 @@ export default class RouterProvider extends ServiceProvider {
                 .use(cors())
             ;
 
+            RouterFacade.setInstance(router);
+
             const config = routerConfig();
 
             router.listen(config.port, () => {
                 Logger.info(Lang.__("Http server is running at [{{scheme}}://{{host}}:{{port}}]", config));
+
+                resolve();
             });
-
-            RouterFacade.setInstance(router);
-
-            resolve();
         });
     }
 }
