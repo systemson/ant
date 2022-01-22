@@ -7,13 +7,31 @@ import { Response as ExpressResponse, Request as ExpressRequest } from "express"
 import { getEnv, Lang, logCatchedError, logCatchedException, NODE_ENV } from "./helpers";
 import { ServiceProviderContract } from "./service_provider";
 
+export interface BoostrapInterface {
+    /**
+     * The declared application's service providers.
+     */
+    providers: (new() => ServiceProviderContract)[];
+
+    /**
+     * The declared application's routes. 
+     */
+    routes:  (new() => RouteContract)[];
+
+    /**
+     * The declared application's workers. 
+     */
+    workers: (new() => WorkerContract)[];
+}
+
+
 export class App {
     routes: Map<string, RouteOptions> = new Map();
 
     public isRunning: boolean = false;
 
     constructor(
-        protected boostrap: Boostrap,
+        protected boostrap: BoostrapInterface,
     ) {
         this.init();
     }
@@ -277,5 +295,3 @@ export class App {
         });
     }
 }
-
-export const app = new App(new Boostrap());

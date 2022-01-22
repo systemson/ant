@@ -11,8 +11,9 @@ import RouterProvider from "./providers/router.provider";
 import { TestWorkerRoute } from "./routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
 import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
+import { BoostrapInterface } from "./framework/app";
 
-export class Boostrap {
+export class Boostrap implements BoostrapInterface {
 
     /**
      * The declared application's service providers.
