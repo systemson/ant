@@ -1,9 +1,6 @@
-import { ServiceProvider } from "../framework/service_provider";
-import { Logger } from "../framework/logger";
 import express from "express";
-import { routerConfig, RouterFacade } from "../framework/router";
-import { Lang } from "../framework/helpers";
-import cors from 'cors';
+import cors from "cors";
+import { ServiceProvider, RouterFacade, routerConfig, Logger, Lang } from "@ant/framework";
 
 export default class RouterProvider extends ServiceProvider {
     boot(): Promise<void> {

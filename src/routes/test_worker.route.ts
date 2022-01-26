@@ -1,6 +1,6 @@
-import { BaseRoute, Method, Request, response, Response } from "../framework/router";
-import { QueueEngineFacade } from "../framework/queue";
-import { Lang } from "../framework/helpers";
+import { BaseRoute, Method, Request, response, Response } from "@ant/framework";
+import { QueueEngineFacade } from "@ant/framework";
+import { Lang } from "@ant/framework";
 
 export class TestWorkerRoute extends BaseRoute {
     url = "/test/:status";

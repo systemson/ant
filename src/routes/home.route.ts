@@ -1,5 +1,5 @@
-import { BaseRoute, Method, response, Response } from "../framework/router";
-import { getEnv, Lang } from "../framework/helpers";
+import { BaseRoute, Method, response, Response } from "@ant/framework";
+import { getEnv, Lang } from "@ant/framework";
 
 export class HomeRoute extends BaseRoute {
     url = "/";

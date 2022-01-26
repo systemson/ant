@@ -1,6 +1,5 @@
+import { Model, DatabaseLoggerProvider } from "@ant/framework";
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
-import { DatabaseLoggerProvider } from "../framework/logger";
-import { Model } from "../framework/model";
 
 @Entity()
 export class Log extends Model implements DatabaseLoggerProvider {

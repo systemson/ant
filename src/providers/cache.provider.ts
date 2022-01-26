@@ -1,6 +1,4 @@
-import { ServiceProvider } from "../framework/service_provider";
-import { getEnv } from "../framework/helpers";
-import { CacheFacade, FilesystemChacheDriver, RedisChacheDriver, RedisConfigContract } from "../framework/cache";
+import { ServiceProvider, getEnv, RedisConfigContract, RedisChacheDriver, CacheFacade, FilesystemChacheDriver } from "@ant/framework";
 
 export default class CacheProvider extends ServiceProvider {
     boot(): Promise<void> {
@@ -17,7 +15,7 @@ export default class CacheProvider extends ServiceProvider {
 
     protected initRedisCache(): void {
         const redisConfig: RedisConfigContract = {
-            url: getEnv('REDIS_URL'),
+            url: getEnv("REDIS_URL"),
             port: parseInt(getEnv("REDIS_PORT", "6379")),
             host: getEnv("REDIS_HOST", "localhost"),
             password: getEnv("REDIS_PASSWORD"),

@@ -1,4 +1,4 @@
-import { BaseRoute, Method, Request, response, Response } from "../framework/router";
+import { BaseRoute, Method, Request, response, Response } from "@ant/framework";
 import { Log } from "../models/log";
 
 export class LogsListRoute extends BaseRoute {
