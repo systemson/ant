@@ -17,8 +17,8 @@ export class Boostrap implements BoostrapInterface {
      */
     public providers: (new() => ServiceProviderContract)[] = [
         LogProvider,
-        DatabaseProvider,
         CacheProvider,
+        DatabaseProvider,
         RouterProvider,
     ];
 

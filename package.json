@@ -9,11 +9,11 @@
   },
   "main": "./build/server.js",
   "scripts": {
-    "serve:dev": "nodemon server.ts",
+    "build": "tsc --project ./",
     "start": "npm run build && node ./build/server.js",
     "serve": "ts-node --transpile-only ./server.ts",
-    "build": "tsc --project ./",
-    "compile": "npm run build && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
+    "serve:dev": "nodemon server.ts",
+    "compile:win": "npm run build && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node16-win-x64 --compress GZip",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "mocha",
@@ -23,10 +23,12 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@ant/framework": "github:systemson/ant_framework",
-    "pg": "^8.7.1"
+    "compression": "^1.7.4",
+    "pg": "^8.7.3"
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
+    "@types/compression": "^1.7.2",
     "@types/cors": "^2.8.12",
     "@types/mocha": "^8.2.3",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
@@ -45,7 +47,6 @@
       "src/*",
       ".env",
       ".env.development",
-      ".env.compiled",
       ".env.production"
     ],
     "ignore": [

@@ -13,6 +13,9 @@ export class TestWorker extends BaseWorker {
             };
         }
 
-        throw new Error(Lang.__("Job have failed."));
+        throw new Error(Lang.__("Job [{{name}}#{{id}}] have failed.", {
+            name: job.name,
+            id: job.id?.toString() as string,
+        }));
     }
 }
