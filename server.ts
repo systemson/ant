@@ -1,5 +1,9 @@
 import "reflect-metadata";
-import { logCatchedException } from "./src/framework/helpers";
-import { app } from "./src/framework/app";
+import { App, logCatchedException } from "@ant/framework";
+import { Boostrap } from "./src/bootstrap";
 
-app.boot().catch(logCatchedException);
+(new App(new Boostrap()))
+    .boot()
+    .catch(logCatchedException)
+;
+

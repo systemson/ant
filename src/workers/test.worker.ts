@@ -1,6 +1,5 @@
-import { BaseWorker } from "../framework/queue";
+import { BaseWorker, Lang } from "@ant/framework";
 import { Job } from "bullmq";
-import { Lang } from "../framework/helpers";
 
 export class TestWorker extends BaseWorker {
     handler(job: Job): any {
@@ -14,6 +13,9 @@ export class TestWorker extends BaseWorker {
             };
         }
 
-        throw new Error(Lang.__("Job have failed."));
+        throw new Error(Lang.__("Job [{{name}}#{{id}}] have failed.", {
+            name: job.name,
+            id: job.id?.toString() as string,
+        }));
     }
 }

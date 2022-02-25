@@ -1,7 +1,5 @@
-import { Queue } from "bullmq";
-import { getEnv } from "../framework/helpers";
-import { QueueEngineFacade } from "../framework/queue";
-import { BaseRoute, Method, Request, response, Response } from "../framework/router";
+import { JobType, Queue } from "bullmq";
+import { BaseRoute, getEnv, Method, QueueEngineFacade, Request, response, Response } from "@ant/framework";
 
 export class JobsMonitorRoute extends BaseRoute {
     url = "/api/jobs_monitor";
@@ -10,10 +8,10 @@ export class JobsMonitorRoute extends BaseRoute {
 
     async handle(req: Request): Promise<Response> {
         const queueName = req.query.queue as string;
-        const statusName = req.query.status as string;
+        const statusName = req.query.status as JobType;
 
         let queue: Queue;
-        let statuses: string[];
+        let statuses: JobType[];
 
         if (statusName) {
             statuses = [statusName];

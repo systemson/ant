@@ -1,13 +1,11 @@
-import { ServiceProvider } from "../framework/service_provider";
-import { getEnv, Lang, logCatchedException, NODE_ENV, timestamp } from "../framework/helpers";
-import { OrmFacade } from "../framework/orm_facade";
-import { ConsoleLogger, Logger } from "../framework/logger";
 import { createConnection } from "typeorm";
 import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
 import { snakeCase } from "typeorm/util/StringUtils";
 import path from "path";
 import { cwd } from "process";
 import {Logger as TypeOrmLogContract} from "typeorm";
+import { ConsoleLogger, getEnv, Lang, logCatchedException, Logger, NODE_ENV, OrmFacade, ServiceProvider, timestamp } from "@ant/framework";
+import { isTypescript } from "@ant/framework/lib/src/helpers";
 
 export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
     tableName(className: string, customName: string): string {
@@ -113,7 +111,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 password: getEnv("DB_PASSWORD", "postgres"),
                 database: getEnv("DB_DATABASE"),
                 schema:  getEnv("DB_SCHEMA", "public"),
-                entities: NODE_ENV === "compiled" ? [path.join(__dirname, "/../../", "src", "models/**/*.js")] : [path.join(cwd(), "src", "models/**/*.ts")],
+                entities: isTypescript() ? [path.join(cwd(), "src", "models/**/*.ts")] : [path.join(cwd(), "build", "src", "models/**/*.js")],
                 entityPrefix: getEnv("BD_PREFIX"),
                 synchronize: false,
                 dropSchema: false,

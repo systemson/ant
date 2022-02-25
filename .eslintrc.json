@@ -10,7 +10,8 @@
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 12,
-        "sourceType": "module"
+        "sourceType": "module",
+        "warnOnUnsupportedTypeScriptVersion": false
     },
     "plugins": [
         "@typescript-eslint"
@@ -32,6 +33,21 @@
             "error",
             "always"
         ],
+        "yoda": [
+            "error",
+            "never"
+        ],
+        "one-var-declaration-per-line": [
+            "error",
+            "initializations"
+        ],
+        "no-console": 2,
+        "no-alert": 2,
+        "no-inline-comments": 2,
+        "no-undef": 2,
+        "eol-last": 2,
+        "camelcase": 2,
+        "prefer-const": 2,
         "@typescript-eslint/no-explicit-any": "off"
     }
 }
