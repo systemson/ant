@@ -13,7 +13,7 @@
     "start": "npm run build && node ./build/server.js",
     "serve": "ts-node --transpile-only ./server.ts",
     "serve:dev": "nodemon server.ts",
-    "compile:win": "npm run build && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node16-win-x64 --compress GZip",
+    "compile:win": "npm run build && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
     "lint": "npx eslint ./server.ts ./src/**/*",
     "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "mocha",
