@@ -1,4 +1,4 @@
-import { BaseTask } from "@ant/framework";
+import { BaseTask } from "@ant/framework/lib/src/scheduler";
 
 export class TestTask extends BaseTask {
     name = "operacion_entrada";
