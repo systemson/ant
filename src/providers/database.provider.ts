@@ -111,7 +111,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 password: getEnv("DB_PASSWORD", "postgres"),
                 database: getEnv("DB_DATABASE"),
                 schema:  getEnv("DB_SCHEMA", "public"),
-                entities: [path.join(__dirname, "..", "models/**/*.*")],
+                entities: [path.join(__dirname, "..", "models/**/**.*")],
                 entityPrefix: getEnv("BD_PREFIX"),
                 synchronize: false,
                 dropSchema: false,
