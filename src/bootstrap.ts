@@ -19,8 +19,8 @@ export class Boostrap implements BoostrapInterface {
      */
     public providers: (new(boostrap: BoostrapInterface) => ServiceProviderContract)[] = [
         LogProvider,
-        // CacheProvider,
-        // DatabaseProvider,
+        CacheProvider,
+        DatabaseProvider,
         RouterProvider,
         TasksProvider,
     ];
@@ -40,7 +40,7 @@ export class Boostrap implements BoostrapInterface {
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        // TestWorker
+        TestWorker
     ];
 
     /**
