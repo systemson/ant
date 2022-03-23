@@ -10,7 +10,7 @@ import { TestWorker } from "./workers/test.worker";
 import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
 import { BoostrapInterface, RouteContract, ServiceProviderContract, WorkerContract } from "@ant/framework";
 import { TaskContract } from "@ant/framework/lib/src/scheduler";
-import TasksProvider from "./providers/taks.provider";
+import TasksProvider from "./providers/tasks.provider";
 import { TestTask } from "./tasks/test.task";
 
 export class Boostrap implements BoostrapInterface {
@@ -19,8 +19,8 @@ export class Boostrap implements BoostrapInterface {
      */
     public providers: (new(boostrap: BoostrapInterface) => ServiceProviderContract)[] = [
         LogProvider,
-        CacheProvider,
-        DatabaseProvider,
+        // CacheProvider,
+        // DatabaseProvider,
         RouterProvider,
         TasksProvider,
     ];
@@ -40,7 +40,7 @@ export class Boostrap implements BoostrapInterface {
      * The declared application's workers. 
      */
     public workers: (new() => WorkerContract)[] = [
-        TestWorker
+        // TestWorker
     ];
 
     /**
