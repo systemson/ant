@@ -1,4 +1,4 @@
-import { dummyCallback, getEnv, Lang, logCatchedError, logCatchedException, Logger, ServiceProvider } from "@ant/framework";
+import { getEnv, Lang, logCatchedError, logCatchedException, Logger, ServiceProvider } from "@ant/framework";
 import { Admin, Consumer, Kafka, LogEntry, logLevel, Message, Producer } from "kafkajs";
 import { snakeCase } from "typeorm/util/StringUtils";
 
@@ -6,29 +6,34 @@ export class KafkaFacade {
     public static kafka: Kafka;
     public static producer: Producer;
 
-    public static produce(topic: string, message: Message[]): void {
-        Logger.debug(`Producing message to topic [${topic}]`);
+    public static async produce(topic: string, message: Message[]): Promise<void> {
+        return new Promise((resolve, reject) => {
+            Logger.debug(`Producing message to topic [${topic}]`);
 
-        KafkaFacade.producer.send({
-            topic: topic,
-            messages: message,
-        }).then(metadata => {
-            for (const data of metadata) {
-                Logger.debug(`Message successfully produced to topic [${data.topicName}(#${data.partition})].`);
-                Logger.trace("Message produced: " + JSON.stringify(message, null, 4));
-            }
-        }, error => {
-            Logger.error(`Error producing a message to topic [${topic}]`);
-            Logger.error("Message: " + JSON.stringify(message, null, 4));
-            logCatchedError(error);
+            KafkaFacade.producer.send({
+                topic: topic,
+                messages: message,
+            }).then(metadata => {
+                for (const data of metadata) {
+                    Logger.debug(`Message successfully produced to topic [${data.topicName}(#${data.partition})].`);
+                    Logger.trace("Message produced: " + JSON.stringify(message, null, 4));
+                }
+
+                resolve();
+            }, error => {
+                Logger.error(`Error producing a message to topic [${topic}]`);
+                Logger.error("Message: " + JSON.stringify(message, null, 4));
+                logCatchedError(error);
+                reject(error);
+            })
+                .catch(logCatchedError)
+            ;
         })
-            .catch(logCatchedError)
-        ;
     }
 
     public static async getConsumer(groupId?: string): Promise<Consumer> {
         const consumer =  KafkaFacade.kafka.consumer({
-            groupId: groupId || snakeCase(getEnv("KAFKA_CONSUMER_GROUP_ID")),
+            groupId: groupId || snakeCase(getEnv("KAFKA_DEFAULT_CONSUMER_GROUP_ID")),
             allowAutoTopicCreation: false,
         });
 
@@ -92,14 +97,13 @@ export default class KafkaProvider extends ServiceProvider {
                     retries: parseInt(getEnv("KAFKA_RETRY_TIMES", "3"))
                 },
                 logLevel: logLevel.NOTHING,
-                logCreator: () => dummyCallback
+                // logCreator: () => kafkaLogger
             });
 
             const producer = kafka.producer({
                 allowAutoTopicCreation: false,
                 transactionTimeout: 2000
-            })
-
+            });
 
             producer.connect().then(async () => {
                 KafkaFacade.kafka = kafka;
@@ -108,7 +112,7 @@ export default class KafkaProvider extends ServiceProvider {
                 Logger.info(Lang.__("Kafka producer successfully connected to kafka broker(s) on [{{brokers}}].", {
                     brokers: brokers
                 }));
-                
+
                 Logger.audit(Lang.__("Consumers set up started."));
 
                 if (this.boostrap.consumers.length > 0) {
@@ -130,8 +134,6 @@ export default class KafkaProvider extends ServiceProvider {
                                 topic: consumer.topic,
                             }))
                         });
-
-                        consumer.doHandle();
                     }
 
                     Logger.audit(Lang.__("Consumers set up completed [{{count}}].", {
@@ -142,7 +144,6 @@ export default class KafkaProvider extends ServiceProvider {
                 }
 
                 resolve();
-   
             }, error => {
                 Logger.error(`Kafka producer cannot connect to kafka broker(s) [${brokers}].`);
                 logCatchedError(error);
