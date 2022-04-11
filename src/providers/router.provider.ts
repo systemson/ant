@@ -18,6 +18,7 @@ export default class RouterProvider extends ServiceProvider {
                 .use(express.json())
                 .use(cors())
                 .use(compression())
+                .use(express.text({ type: "application/xml" }))
             ;
 
             RouterFacade.setInstance(router);

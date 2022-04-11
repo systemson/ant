@@ -51,8 +51,6 @@ export class KafkaFacade {
 
 export function kafkaLogger() {
     return (entry: LogEntry): void => {
-        console.log("kafka error.");
-        
         switch (entry.label) {
         case 'ERROR':
         case 'NOTHING':

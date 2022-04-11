@@ -1,4 +1,4 @@
-import { BaseConsumer, getEnv } from "@ant/framework";
+import { BaseConsumer, getEnv, Lang, Logger } from "@ant/framework";
 import { EachMessagePayload } from "kafkajs";
 import { snakeCase } from "typeorm/util/StringUtils";
 
@@ -8,7 +8,8 @@ export class TestConsumer extends BaseConsumer {
     handler(payload: EachMessagePayload): Promise<void> {
         return new Promise((resolve) => {
 
-            console.log(payload.message.value?.toString());
+            Logger.debug(Lang.__("Running test consumer"));
+            Logger.audit(payload.message.value?.toString() || "");
             resolve();
         })
     }
