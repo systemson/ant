@@ -1,4 +1,8 @@
-import { Lang, Logger, ServiceProvider } from "@ant/framework";
+import {
+    Lang,
+    Logger,
+    ServiceProvider
+} from "@ant/framework";
 import { SchedulerFacade } from "@ant/framework/lib/src/scheduler";
 
 export default class TasksProvider extends ServiceProvider {

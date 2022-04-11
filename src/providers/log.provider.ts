@@ -1,4 +1,11 @@
-import { ServiceProvider, getEnv, Logger, ConsoleLogger, DatabaseLogger, FileLogger } from "@ant/framework";
+import {
+    ServiceProvider,
+    getEnv,
+    Logger,
+    ConsoleLogger,
+    DatabaseLogger,
+    FileLogger
+} from "@ant/framework";
 import { snakeCase } from "typeorm/util/StringUtils";
 import { Log } from "../models/log";
 

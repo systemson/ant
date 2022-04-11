@@ -1,5 +1,13 @@
-import { BaseRoute, Method, response, Response } from "@ant/framework";
-import { getEnv, Lang } from "@ant/framework";
+import {
+    BaseRoute,
+    Method,
+    response,
+    Response
+} from "@ant/framework";
+import {
+    getEnv,
+    Lang
+} from "@ant/framework";
 
 export class InfoRoute extends BaseRoute {
     url = "/info";

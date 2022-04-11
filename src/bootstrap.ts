@@ -8,10 +8,20 @@ import RouterProvider from "./providers/router.provider";
 import { TestWorkerRoute } from "./routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
 import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
-import { BoostrapInterface, RouteContract, ServiceProviderContract, WorkerContract } from "@ant/framework";
+import {
+    BoostrapInterface,
+    RouteContract,
+    ServiceProviderContract,
+    WorkerContract,
+    ConsumerContract
+} from "@ant/framework";
 import { TaskContract } from "@ant/framework/lib/src/scheduler";
 import TasksProvider from "./providers/tasks.provider";
 import { TestTask } from "./tasks/test.task";
+import KafkaProvider from "./providers/kafka.provider";
+import { KafkaTask } from "./tasks/kafka.task";
+import { KafkaRoute } from "./routes/kafka.route";
+import { TestConsumer } from "./consumers/test.consumer";
 
 export class Boostrap implements BoostrapInterface {
     /**
@@ -19,6 +29,7 @@ export class Boostrap implements BoostrapInterface {
      */
     public providers: (new(boostrap: BoostrapInterface) => ServiceProviderContract)[] = [
         LogProvider,
+        KafkaProvider,
         CacheProvider,
         DatabaseProvider,
         RouterProvider,
@@ -34,6 +45,7 @@ export class Boostrap implements BoostrapInterface {
         LogsListRoute,
         TestWorkerRoute,
         JobsMonitorRoute,
+        KafkaRoute,
     ];
 
     /**
@@ -44,9 +56,17 @@ export class Boostrap implements BoostrapInterface {
     ];
 
     /**
+     * The declared application's workers. 
+     */
+    public consumers: (new() => ConsumerContract)[] = [
+        TestConsumer
+    ];
+
+    /**
      * The declared application's tasks. 
      */
-    tasks: (new () => TaskContract)[] = [
-        TestTask
+    public tasks: (new () => TaskContract)[] = [
+        TestTask,
+        KafkaTask,
     ];
 }

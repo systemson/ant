@@ -1,4 +1,7 @@
-import { BaseWorker, Lang } from "@ant/framework";
+import {
+    BaseWorker,
+    Lang
+} from "@ant/framework";
 import { Job } from "bullmq";
 
 export class TestWorker extends BaseWorker {

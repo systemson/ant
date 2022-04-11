@@ -1,7 +1,13 @@
 import express from "express";
 import compression from "compression";
 import cors from "cors";
-import { ServiceProvider, RouterFacade, routerConfig, Logger, Lang } from "@ant/framework";
+import {
+    ServiceProvider,
+    RouterFacade,
+    routerConfig,
+    Logger,
+    Lang
+} from "@ant/framework";
 
 export default class RouterProvider extends ServiceProvider {
     boot(): Promise<void> {

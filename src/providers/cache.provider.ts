@@ -1,4 +1,11 @@
-import { ServiceProvider, getEnv, RedisConfigContract, RedisChacheDriver, CacheFacade, FilesystemChacheDriver } from "@ant/framework";
+import {
+    ServiceProvider,
+    getEnv,
+    RedisConfigContract,
+    RedisChacheDriver,
+    CacheFacade,
+    FilesystemChacheDriver
+} from "@ant/framework";
 
 export default class CacheProvider extends ServiceProvider {
     boot(): Promise<void> {

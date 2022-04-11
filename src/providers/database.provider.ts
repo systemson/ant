@@ -1,11 +1,26 @@
-import { createConnection } from "typeorm";
-import { DefaultNamingStrategy, NamingStrategyInterface } from "typeorm";
+/* eslint-disable indent */
+import {
+    createConnection,
+    ConnectionOptions,
+    DatabaseType
+} from "typeorm";
+import {
+    DefaultNamingStrategy,
+    NamingStrategyInterface
+} from "typeorm";
 import { snakeCase } from "typeorm/util/StringUtils";
 import path from "path";
-import { cwd } from "process";
-import {Logger as TypeOrmLogContract} from "typeorm";
-import { ConsoleLogger, getEnv, Lang, logCatchedException, Logger, NODE_ENV, OrmFacade, ServiceProvider, timestamp } from "@ant/framework";
-import { isTypescript } from "@ant/framework/lib/src/helpers";
+import { Logger as TypeOrmLogContract } from "typeorm";
+import {
+    ConsoleLogger,
+    getEnv,
+    Lang,
+    logCatchedException,
+    Logger,
+    OrmFacade,
+    ServiceProvider,
+    timestamp
+} from "@ant/framework";
 
 export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
     tableName(className: string, customName: string): string {
@@ -100,33 +115,87 @@ export class CustomLogger implements TypeOrmLogContract {
     }
 }
 
-export default class DatabaseProvider extends ServiceProvider {
-    boot(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            createConnection({
-                type: getEnv("DB_TYPE", "postgres") as any,
+// eslint-disable-next-line no-undef
+export function getConnectionConfig(
+    type: Exclude<DatabaseType, "aurora-data-api" | "aurora-data-api-pg" | "expo" | "capacitor">,
+    extra?: Partial<ConnectionOptions>
+): Exclude<ConnectionOptions, "CapacitorConnectionOptions"> {
+    let config: Exclude<ConnectionOptions, "CapacitorConnectionOptions">;
+
+    switch (type) {
+        case "oracle":
+            config = {
+                type: type,
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
                 username: getEnv("DB_USERNAME", "postgres"),
                 password: getEnv("DB_PASSWORD", "postgres"),
-                database: getEnv("DB_DATABASE"),
-                schema:  getEnv("DB_SCHEMA", "public"),
-                entities: [path.join(__dirname, "..", "models/**/**.*")],
+                sid: getEnv("DB_DATABASE"),
+                schema:  getEnv("DB_SCHEMA", ""),
                 entityPrefix: getEnv("BD_PREFIX"),
+            }
+            break;
+
+            case "postgres":
+            case "mysql":
+            case "mariadb":
+            case "cockroachdb":
+                config = {
+                    type: type,
+                    host: getEnv("DB_HOST", "localhost"),
+                    port: parseInt(getEnv("DB_PORT", "5432")),
+                    username: getEnv("DB_USERNAME", "postgres"),
+                    password: getEnv("DB_PASSWORD", "postgres"),
+                    database: getEnv("DB_DATABASE"),
+                    schema:  getEnv("DB_SCHEMA", ""),
+                    entityPrefix: getEnv("BD_PREFIX"),
+                }
+                break;
+
+            case "sqlite":
+            case "better-sqlite3":
+                config = {
+                    type: "sqlite",
+                    database: getEnv("DB_DATABASE"),
+                    entityPrefix: getEnv("BD_PREFIX"),
+                }
+                break;
+
+        default:
+            throw new Error(Lang.__("No default connection availible for [{{type}}]", {
+                type: type
+            }));
+            break;
+    }
+    return Object.assign({}, config, extra);
+}
+
+export default class DatabaseProvider extends ServiceProvider {
+    boot(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            createConnection(getConnectionConfig(getEnv("DB_TYPE", "postgres") as any, {
+                entities: [path.join(__dirname, "..", "models/**/**.*")],
                 synchronize: false,
                 dropSchema: false,
                 namingStrategy: new SnakeCaseNamingStrategy(),
                 logging: false,
                 logger: getEnv("BD_DEBUG") === "true" ?  new CustomLogger() : undefined,
-            }).then((connection) => {
+            })).then((connection) => {
                 OrmFacade.orm = connection;
+                Logger.info(Lang.__("Connected to {{driver}} server on [{{host}}:{{port}}/{{database}}].", {
+                    host: getEnv("DB_HOST", "localhost"),
+                    port: getEnv("DB_PORT", "5432"),
+                    driver: getEnv("DB_TYPE", "postgres"),
+                    database: getEnv("DB_DATABASE", "ant"),
+                }));
                 resolve();
             }, reject)
                 .catch((error) => {
-                    Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}].", {
+                    Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}/{{database}}].", {
                         host: getEnv("DB_HOST", "localhost"),
                         port: getEnv("DB_PORT", "5432"),
                         driver: getEnv("DB_TYPE", "postgres"),
+                        database: getEnv("DB_DATABASE", "ant"),
                     }));
 
                     logCatchedException(error);
