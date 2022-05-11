@@ -1,12 +1,13 @@
-import { getEnv, Lang, logCatchedError, logCatchedException, Logger, now, ServiceProvider } from "@ant/framework";
-import { Admin, Consumer, Kafka, LogEntry, logLevel, Message, Producer, ITopicConfig } from "kafkajs";
+import { getEnv, Lang, logCatchedError, logCatchedException, Logger, now, ServiceProvider, TIMESTAMP_FORMAT } from "@ant/framework";
+import { Admin, Consumer, Kafka, LogEntry, logLevel, logCreator, Message, Producer, ITopicConfig } from "kafkajs";
+import moment from "moment";
 import { snakeCase } from "typeorm/util/StringUtils";
 
 export class KafkaFacade {
     public static kafka: Kafka;
     public static producer: Producer;
 
-    public static produce(topic: string, message: Message[]): Promise<void> {
+    protected static produce(topic: string, message: Message[]): Promise<void> {
         return new Promise((resolve, reject) => {
             Logger.debug(`Producing message to topic [${topic}]`);
 
@@ -16,13 +17,15 @@ export class KafkaFacade {
             }).then(metadata => {
                 for (const data of metadata) {
                     Logger.debug(`Message successfully produced to topic [${data.topicName}(#${data.partition})].`);
-                    Logger.trace("Message produced: " + JSON.stringify(message, null, 4));
+                    Logger.trace("Message produced: ");
+                    Logger.trace(message);
                 }
 
                 resolve();
             }, error => {
                 Logger.error(`Error producing a message to topic [${topic}]`);
-                Logger.trace("Message: " + JSON.stringify(message, null, 4));
+                Logger.trace("Message: ");
+                Logger.trace(message);
                 logCatchedError(error);
                 reject(error);
             })
@@ -47,7 +50,7 @@ export class KafkaFacade {
             });
 
             Logger.error(msg);
-            Logger.trace(JSON.stringify(stream.body, null, 4));
+            Logger.trace(stream.body);
             throw new Error(msg);
         } else {
             stream.retries++;
@@ -99,33 +102,32 @@ export type MessageStream = {
     topic: string;
 }
 
-export function kafkaLogger() {
+export function kafkaLogger(level: logLevel) {
     return (entry: LogEntry): void => {
-        const body = JSON.stringify(entry, null, 4);
 
-        switch (entry.label) {
-        case 'ERROR':
+        switch (level) {
+        case logLevel.ERROR:
             logCatchedError({
                 name: entry.log.namespace,
-                message: body,
+                message: JSON.stringify(entry),
                 stack: entry.log.stack
             });
             break;
 
-        case 'WARN':
-            Logger.warn(body);
+        case logLevel.WARN:
+            Logger.warn(entry);
             break;
 
-        case 'INFO':
-            Logger.info(body);
+        case logLevel.INFO:
+            Logger.info(entry);
             break;
 
-        case 'DEBUG':
-            Logger.audit(body);
+        case logLevel.DEBUG:
+            Logger.audit(entry);
             break;
 
         default:
-            Logger.audit(body);
+            Logger.audit(entry);
             break;
         }
     }
@@ -143,7 +145,7 @@ export default class KafkaProvider extends ServiceProvider {
                     retries: parseInt(getEnv("KAFKA_RETRY_TIMES", "3"))
                 },
                 logLevel: logLevel.ERROR,
-                logCreator: () => kafkaLogger
+                logCreator: kafkaLogger
             });
 
             const admin = kafka.admin();
@@ -156,21 +158,27 @@ export default class KafkaProvider extends ServiceProvider {
                     for (const topic of raw) {
                         topics.push({
                             topic: topic,
-                            numPartitions:  parseInt(getEnv("KAFKA_NUM_PARTITIONS", "1"))
+                            numPartitions: getEnv("KAFKA_NUM_PARTITIONS") ? parseInt(getEnv("KAFKA_NUM_PARTITIONS")) : undefined,
+                            replicationFactor:getEnv("KAFKA_REPLICATION_FACTOR") ? parseInt(getEnv("KAFKA_REPLICATION_FACTOR")) : undefined,
                         });
                     }
                     const current = await admin.listTopics();
     
-                    Logger.debug(`Current topics: ` + JSON.stringify(current, null, 4));
+                    Logger.trace(Lang.__("Current topics: "));
+                    Logger.trace(current);
     
                     await admin.createTopics({
                         waitForLeaders: true,
                         topics: topics
                     }).then(result => {
                         if (result) {
-                            Logger.debug(`Topics [${raw}] successfully created.`)
+                            Logger.debug(Lang.__("Topics [{{topics}}] successfully created.", {
+                                topics: raw.join(", ")
+                            }))
                         } else {
-                            Logger.debug(`Topics [${raw}] were not created.`)
+                            Logger.debug(Lang.__(`Topics [{{topics}}] were not created.`, {
+                                topics: raw.join(", ")
+                            }))
                         }
                     }, error => {
                         logCatchedException(error)
@@ -178,7 +186,9 @@ export default class KafkaProvider extends ServiceProvider {
                         .catch(logCatchedException)
                     ;
                 }, error => {
-                    Logger.error(`Kafka admin cannot connect to kafka broker(s) [${brokers}].`);
+                    Logger.error(Lang.__("Kafka admin cannot connect to kafka broker(s) [{{brokers}}].", {
+                        brokers: brokers
+                    }));
                     logCatchedException(error);
                     reject(error);
                 })
@@ -203,23 +213,69 @@ export default class KafkaProvider extends ServiceProvider {
 
                 if (this.boostrap.consumers.length > 0) {
                     for (const consumerClass of this.boostrap.consumers) {
-                        const consumer = new consumerClass();
+                        const instance = new consumerClass();
+                        instance.onCreated();
 
                         Logger.audit(Lang.__("Preparing consumer [{{name}}({{group}})] on topic [{{topic}}].", {
-                            name: consumer.constructor.name,
-                            group: consumer.groupId,
-                            topic: consumer.topic,
-                        }))
+                            name: instance.constructor.name,
+                            group: instance.groupId,
+                            topic: instance.topic,
+                        }));
 
-                        const baseConsumer = await KafkaFacade.getConsumer(consumer.groupId).catch(logCatchedError)
-    
-                        await consumer.boot(baseConsumer as any).then(() => {
+                        const consumer = await KafkaFacade.getConsumer(instance.groupId).catch(logCatchedError) as Consumer;
+
+                        await instance.boot(consumer).then(() => {
+                            consumer.run({
+                                eachMessage: async payload => {
+                                    const message = payload.message;
+                                    const value = JSON.parse(payload.message.value?.toString() as string);
+
+                                    Logger.debug(Lang.__("Consuming message on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
+                                        name: instance.constructor.name,
+                                        group: instance.groupId,
+                                        topic: instance.topic,
+                                        partition: payload.partition.toString(),
+                                    }))
+
+                                    return instance.handler(value, payload)
+                                        .then(() => {
+
+                                            Logger.debug(Lang.__("Message successfully consumed on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
+                                                name: instance.constructor.name,
+                                                group: instance.groupId,
+                                                topic: instance.topic,
+                                                partition: payload.partition.toString(),
+                                            }))
+                                            Logger.trace(Lang.__("Message consumed: "));
+                                            Logger.trace({
+                                                key: message.key?.toString(),
+                                                offset: message.offset,
+                                                message: message.value?.toString(),
+                                                headers: message.headers,
+                                                timestamp: moment(message.timestamp, "x").format(TIMESTAMP_FORMAT),
+                                            });
+                    
+                                            instance.onCompleted(message);
+                                        }, error => {
+                                            logCatchedError(error);
+                                            instance.onFailed(error, message);
+                                        })
+                                        .catch(error => {
+                                            instance.onError(error);
+                                            logCatchedError(error);
+                                        })
+                                    ;
+                                }
+                            });
+
                             Logger.audit(Lang.__("Consumer [{{name}}({{group}})] on topic [{{topic}}] is ready.", {
-                                name: consumer.constructor.name,
-                                group: consumer.groupId,
-                                topic: consumer.topic,
+                                name: instance.constructor.name,
+                                group: instance.groupId,
+                                topic: instance.topic,
                             }))
                         });
+
+                        instance.onBooted();
                     }
 
                     Logger.audit(Lang.__("Consumers set up completed [{{count}}].", {

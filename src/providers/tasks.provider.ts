@@ -14,7 +14,7 @@ export default class TasksProvider extends ServiceProvider {
                 SchedulerFacade.schedule(task);
 
                 Logger.audit(Lang.__("Scheduling task {{name}}", {
-                    name: `${task.constructor.name}`,
+                    name: task.constructor.name,
                 }));
             }
 

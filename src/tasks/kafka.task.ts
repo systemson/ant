@@ -1,4 +1,4 @@
-import { getEnv, Lang } from "@ant/framework";
+import { Lang } from "@ant/framework";
 import { BaseTask } from "@ant/framework/lib/src/scheduler";
 import { KafkaFacade } from "../providers/kafka.provider";
 
@@ -7,12 +7,14 @@ export class KafkaTask extends BaseTask {
     cronExpression = "*/30 * * * * *";
 
     handler(): Promise<void> {
-        return new Promise((resolve) => {
-            KafkaFacade.produce(getEnv("KAFKA_DEFAULT_TOPIC", "test-topic"), [
+        return new Promise((resolve, reject) => {
+            KafkaFacade.stream("default-topic", [
                 { value: Lang.__("Hello world.") },
-            ]);
+            ]).then(() => {
 
-            resolve();
+                resolve();
+
+            }, reject);
         });
     }
 }

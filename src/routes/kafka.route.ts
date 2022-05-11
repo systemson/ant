@@ -17,7 +17,7 @@ export class KafkaRoute extends BaseRoute {
 
     handle(): Promise<Response> {
         return new Promise((success) => {
-            KafkaFacade.produce(getEnv("KAFKA_DEFAULT_TOPIC", "test-topic"), [
+            KafkaFacade.stream(getEnv("KAFKA_DEFAULT_TOPIC", "test-topic"), [
                 { value: Lang.__("Hello world.") },
             ]);
 
