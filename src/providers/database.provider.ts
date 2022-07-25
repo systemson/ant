@@ -24,7 +24,7 @@ import {
 
 export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements NamingStrategyInterface {
     tableName(className: string, customName: string): string {
-        return customName ? customName : snakeCase(className);
+        return (customName ? customName : snakeCase(className)).toUpperCase();
     }
 
     columnName(
@@ -33,7 +33,7 @@ export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements Na
     ): string {
         return (
             customName ? customName : snakeCase(propertyName)
-        );
+        ).toUpperCase();
     }
 
     relationName(propertyName: string): string {
@@ -93,7 +93,6 @@ export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements Na
     uniqueConstraintName(tableOrName: Table | string, columnNames: string[]): string {
         return `uq_${typeof tableOrName == 'string' ? tableOrName : tableOrName.name}_${columnNames.join("_")}`;
     }
-
 
     classTableInheritanceParentColumnName(
         parentTableName: unknown,

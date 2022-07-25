@@ -1,6 +1,6 @@
 {
   "name": "@ant/ant",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "NodeJS + Redis tiny microservices framework",
   "type": "commonjs",
   "repository": {
@@ -15,7 +15,7 @@
     "serve:dev": "nodemon server.ts",
     "compile:win": "npm run build && pkg ./build/server.js --options max-old-space-size=1024 -o app --targets node12-win-x64 --compress GZip",
     "lint": "npx eslint ./server.ts ./src/**/*",
-    "lint-fix": "npx eslint ./server.ts ./src/**/* --fix",
+    "lint:fix": "npx eslint ./server.ts ./src/**/* --fix",
     "test": "mocha",
     "coverage": "nyc --reporter=html npm run test"
   },
