@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import { snakeCase } from "typeorm/util/StringUtils";
 import path from "path";
-import { Logger as TypeOrmLogContract } from "typeorm";
+import { Logger as TypeOrmLogContract, Table } from "typeorm";
 import {
     ConsoleLogger,
     getEnv,
@@ -67,6 +67,33 @@ export class SnakeCaseNamingStrategy extends DefaultNamingStrategy implements Na
             tableName + "_" + (columnName ? columnName : propertyName),
         );
     }
+
+    joinTableInverseColumnName(
+        tableName: string,
+        propertyName: string,
+        columnName?: string,
+    ): string {
+        return snakeCase(
+            tableName + "_" + (columnName ? columnName : propertyName),
+        );
+    }
+
+    primaryKeyName(tableOrName: Table | string, columnNames: string[]): string {
+        return `pk_${typeof tableOrName == 'string' ? tableOrName : tableOrName.name}_${columnNames.join("_")}`;
+    }
+
+    foreignKeyName(tableOrName: Table | string, columnNames: string[]): string {
+        return `fk_${typeof tableOrName == 'string' ? tableOrName : tableOrName.name}_${columnNames.join("_")}`;
+    }
+
+    indexName(tableOrName: Table | string, columnNames: string[]): string{
+        return `in_${typeof tableOrName == 'string' ? tableOrName : tableOrName.name}_${columnNames.join("_")}`;
+    }
+
+    uniqueConstraintName(tableOrName: Table | string, columnNames: string[]): string {
+        return `uq_${typeof tableOrName == 'string' ? tableOrName : tableOrName.name}_${columnNames.join("_")}`;
+    }
+
 
     classTableInheritanceParentColumnName(
         parentTableName: unknown,
@@ -126,6 +153,7 @@ export function getConnectionConfig(
         case "oracle":
             config = {
                 type: type,
+                url: getEnv("DB_URL"),
                 host: getEnv("DB_HOST", "localhost"),
                 port: parseInt(getEnv("DB_PORT", "5432")),
                 username: getEnv("DB_USERNAME", "postgres"),
@@ -142,6 +170,7 @@ export function getConnectionConfig(
             case "cockroachdb":
                 config = {
                     type: type,
+                    url: getEnv("DB_URL"),
                     host: getEnv("DB_HOST", "localhost"),
                     port: parseInt(getEnv("DB_PORT", "5432")),
                     username: getEnv("DB_USERNAME", "postgres"),
