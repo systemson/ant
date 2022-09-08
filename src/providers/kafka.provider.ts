@@ -1,5 +1,5 @@
 import { getEnv, Lang, logCatchedError, logCatchedException, Logger, now, ServiceProvider, TIMESTAMP_FORMAT } from "@ant/framework";
-import { Admin, Consumer, Kafka, LogEntry, logLevel, logCreator, Message, Producer, ITopicConfig } from "kafkajs";
+import { Admin, Consumer, Kafka, LogEntry, logLevel, Message, Producer, ITopicConfig } from "kafkajs";
 import moment from "moment";
 import { snakeCase } from "typeorm/util/StringUtils";
 

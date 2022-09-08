@@ -78,8 +78,6 @@ export default class RouterProvider extends ServiceProvider {
 
                     Logger.audit(Lang.__("Preparing route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
 
-                    const router = RouterFacade.getInstance();
-
                     this.router[instance.method](instance.url, (req: ExpressRequest, res: ExpressResponse) => {
                         Logger.debug(Lang.__("Request received in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                         Logger.trace(Lang.__("Client request: "));
