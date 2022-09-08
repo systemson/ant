@@ -13,22 +13,19 @@ import {
 } from "@ant/framework";
 import {
     Response as ExpressResponse,
-    Request as ExpressRequest
+    Request as ExpressRequest,
 } from "express";
 
 export default class RouterProvider extends ServiceProvider {
+    protected router = express();
     boot(): Promise<void> {
         return new Promise((resolve) => {
-            const router = express();
-
-            router
+            this.router
                 .use(express.json())
                 .use(cors())
                 .use(compression())
                 .use(express.text({ type: "application/xml" }))
             ;
-
-            RouterFacade.setInstance(router);
 
             const config = routerConfig();
 
@@ -40,11 +37,13 @@ export default class RouterProvider extends ServiceProvider {
                         count: count.toString()
                     }));
 
-                    router.listen(config.port, () => {
+                    const server = this.router.listen(config.port, () => {
                         Logger.info(Lang.__("Http server is running at [{{scheme}}://{{host}}:{{port}}]", config));
-        
+                        
                         resolve();
                     });
+
+                    RouterFacade.setInstance(server);
                 }, (error) => {
                     Logger.audit(Lang.__(error.message));
                 })
@@ -81,7 +80,7 @@ export default class RouterProvider extends ServiceProvider {
 
                     const router = RouterFacade.getInstance();
 
-                    router[instance.method](instance.url, (req: ExpressRequest, res: ExpressResponse) => {
+                    this.router[instance.method](instance.url, (req: ExpressRequest, res: ExpressResponse) => {
                         Logger.debug(Lang.__("Request received in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                         Logger.trace(Lang.__("Client request: "));
                         Logger.trace({
