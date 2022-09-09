@@ -18,6 +18,7 @@ import {
 
 export default class RouterProvider extends ServiceProvider {
     protected router = express();
+
     boot(): Promise<void> {
         return new Promise((resolve) => {
             this.router
