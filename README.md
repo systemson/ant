@@ -1,2 +1,2 @@
 # ant
-NodeJS + (Redis|Kafka) microservices micro framework (Small and Strong as an Ant)
+NodeJS + (Redis|Kafka) tiny microservices framework (Small and Strong as an Ant)

@@ -11,20 +11,25 @@ export class KafkaFacade {
         return new Promise((resolve, reject) => {
             Logger.debug(`Producing message to topic [${topic}]`);
 
+            if (!KafkaFacade.producer) {
+                throw new Error(Lang.__("Kafka producer not found."));
+                
+            }
+
             KafkaFacade.producer.send({
                 topic: topic,
                 messages: message,
             }).then(metadata => {
                 for (const data of metadata) {
                     Logger.debug(`Message successfully produced to topic [${data.topicName}(#${data.partition})].`);
-                    Logger.trace("Message produced: ");
+                    Logger.trace(Lang.__("Message produced: "));
                     Logger.trace(message);
                 }
 
                 resolve();
             }, error => {
                 Logger.error(`Error producing a message to topic [${topic}]`);
-                Logger.trace("Message: ");
+                Logger.trace(Lang.__("Message: "));
                 Logger.trace(message);
                 logCatchedError(error);
                 reject(error);

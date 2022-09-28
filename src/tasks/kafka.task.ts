@@ -14,7 +14,8 @@ export class KafkaTask extends BaseTask {
 
                 resolve();
 
-            }, reject);
+            }, reject)
+                .catch(reject);
         });
     }
 }
