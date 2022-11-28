@@ -3,22 +3,37 @@ import {
     Logger,
     ServiceProvider
 } from "@ant/framework";
-import { SchedulerFacade } from "@ant/framework/lib/src/scheduler";
+import { SchedulerFacade, TaskContract } from "@ant/framework/lib/src/scheduler";
 
 export default class TasksProvider extends ServiceProvider {
-    boot(): Promise<void> {
-        return new Promise((resolve) => {
-            for (const taskClass of this.boostrap.tasks) {
-                const task = new taskClass();
+    async boot(): Promise<void> {
+        await this.setTask(this.boostrap.tasks);
+    }
 
-                SchedulerFacade.schedule(task);
+    protected setTask(tasks: (new() => TaskContract)[]): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (tasks.length > 0) {
+                for (const taskClass of tasks) {
+                    const parent = new taskClass();
+                    for (let index = 0; index < parent.concurrency; index++) {
+                        const task = new taskClass();
+                        task.setId(index + 1);
 
-                Logger.audit(Lang.__("Scheduling task {{name}}", {
-                    name: task.constructor.name,
-                }));
+                        SchedulerFacade.schedule(task);
+        
+                        Logger.audit(Lang.__("Scheduling task [{{name}}(#{{id}})]", {
+                            name: task.constructor.name,
+                            id: task.getId().toString()
+                        }));
+                        
+                        resolve(tasks.length);
+                    }
+                }
+            } else {
+                reject({
+                    message: "No tasks found.",
+                });
             }
-
-            resolve();
         });
     }
 }
