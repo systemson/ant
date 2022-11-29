@@ -1,5 +1,5 @@
-import { getEnv, Lang, logCatchedError, logCatchedException, Logger, now, ServiceProvider, TIMESTAMP_FORMAT } from "@ant/framework";
-import { Admin, Consumer, Kafka, LogEntry, logLevel, Message, Producer, ITopicConfig } from "kafkajs";
+import { getEnv, Lang, logCatchedError, logCatchedException, Logger, NODE_ENV, now, ServiceProvider, TIMESTAMP_FORMAT } from "@ant/framework";
+import { Admin, Consumer, Kafka, LogEntry, logLevel, Message, Producer, ITopicConfig, ITopicPartitionConfig } from "kafkajs";
 import moment from "moment";
 import { snakeCase } from "typeorm/util/StringUtils";
 
@@ -154,150 +154,208 @@ export default class KafkaProvider extends ServiceProvider {
             });
 
             const admin = kafka.admin();
+            KafkaFacade.kafka = kafka;
 
-            if (getEnv("KAFKA_CREATE_TOPICS_ON_START", "false") == "true") {
-                await admin.connect().then(async () => {
-                    const raw = getEnv("KAFKA_TOPICS", "default_topic").split(",");
-                    const topics: ITopicConfig[] = [];
-        
-                    for (const topic of raw) {
-                        topics.push({
-                            topic: topic,
-                            numPartitions: getEnv("KAFKA_NUM_PARTITIONS") ? parseInt(getEnv("KAFKA_NUM_PARTITIONS")) : undefined,
-                            replicationFactor:getEnv("KAFKA_REPLICATION_FACTOR") ? parseInt(getEnv("KAFKA_REPLICATION_FACTOR")) : undefined,
-                        });
-                    }
-                    const current = await admin.listTopics();
-    
-                    Logger.trace(Lang.__("Current topics: "));
-                    Logger.trace(current);
-    
-                    await admin.createTopics({
-                        waitForLeaders: true,
-                        topics: topics
-                    }).then(result => {
-                        if (result) {
-                            Logger.debug(Lang.__("Topics [{{topics}}] successfully created.", {
-                                topics: raw.join(", ")
-                            }))
-                        } else {
-                            Logger.debug(Lang.__(`Topics [{{topics}}] were not created.`, {
-                                topics: raw.join(", ")
-                            }))
-                        }
-                    }, error => {
-                        logCatchedException(error)
-                    })
-                        .catch(logCatchedException)
-                    ;
-                }, error => {
-                    Logger.error(Lang.__("Kafka admin cannot connect to kafka broker(s) [{{brokers}}].", {
-                        brokers: brokers
-                    }));
-                    logCatchedException(error);
-                    reject(error);
-                })
-                    .catch(logCatchedException)
-                ;
-            }
+            await admin.connect()
+                .then(async () => {
+                    const currentTopics = await admin.listTopics();
+                    const topicsArray = getEnv("KAFKA_TOPICS", "default_topic").split(",");
+                    Logger.audit(Lang.__("Current topics: " + currentTopics.join(", ")));
 
-            const producer = kafka.producer({
-                allowAutoTopicCreation: false,
-                transactionTimeout: 2000
-            });
-
-            await producer.connect().then(async () => {
-                KafkaFacade.kafka = kafka;
-                KafkaFacade.producer = producer;
-
-                Logger.debug(Lang.__("Kafka producer successfully connected to kafka broker(s) on [{{brokers}}].", {
-                    brokers: brokers
-                }));
-
-                Logger.audit(Lang.__("Consumers set up started."));
-
-                if (this.boostrap.consumers.length > 0) {
-                    for (const consumerClass of this.boostrap.consumers) {
-                        const instance = new consumerClass();
-                        instance.onCreated();
-
-                        Logger.audit(Lang.__("Preparing consumer [{{name}}({{group}})] on topic [{{topic}}].", {
-                            name: instance.constructor.name,
-                            group: instance.groupId,
-                            topic: instance.topic,
-                        }));
-
-                        const consumer = await KafkaFacade.getConsumer(instance.groupId).catch(logCatchedError) as Consumer;
-
-                        await instance.boot(consumer).then(() => {
-                            consumer.run({
-                                eachMessage: async payload => {
-                                    const message = payload.message;
-                                    const value = JSON.parse(payload.message.value?.toString() as string);
-
-                                    Logger.debug(Lang.__("Consuming message on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
-                                        name: instance.constructor.name,
-                                        group: instance.groupId,
-                                        topic: instance.topic,
-                                        partition: payload.partition.toString(),
-                                    }))
-
-                                    return instance.handler(value, payload)
-                                        .then(() => {
-
-                                            Logger.debug(Lang.__("Message successfully consumed on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
-                                                name: instance.constructor.name,
-                                                group: instance.groupId,
-                                                topic: instance.topic,
-                                                partition: payload.partition.toString(),
-                                            }))
-                                            Logger.trace(Lang.__("Message consumed: "));
-                                            Logger.trace({
-                                                key: message.key?.toString(),
-                                                offset: message.offset,
-                                                message: message.value?.toString(),
-                                                headers: message.headers,
-                                                timestamp: moment(message.timestamp, "x").format(TIMESTAMP_FORMAT),
-                                            });
-                    
-                                            instance.onCompleted(message);
-                                        }, error => {
-                                            logCatchedError(error);
-                                            instance.onFailed(error, message);
-                                        })
-                                        .catch(error => {
-                                            instance.onError(error);
-                                            logCatchedError(error);
-                                        })
-                                    ;
-                                }
+                    if (getEnv("KAFKA_CREATE_TOPICS_ON_START", "false") == "true") {
+                        if (getEnv("KAFKA_DELETE_TOPICS_ON_START", "false") == "true" && NODE_ENV != "production") {
+                            await admin.deleteTopics({
+                                topics: topicsArray.filter(topic => currentTopics.includes(topic))
                             });
 
-                            Logger.audit(Lang.__("Consumer [{{name}}({{group}})] on topic [{{topic}}] is ready.", {
+                            Logger.audit(Lang.__("Topic [{{topic}}] deleted"));
+                        }
+
+                        const newTopics: ITopicConfig[] = [];
+                        const topicPartitions: ITopicPartitionConfig[] = [];
+
+                        for (const topic of topicsArray) {
+                            Logger.audit(Lang.__("Preparing topic [{{topic}}].", {
+                                topic: topic
+                            }));
+
+                            if (!currentTopics.includes(topic) || false) {
+                                Logger.audit(Lang.__("Preparing topic [{{topic}}] creation.", {
+                                    topic: topic
+                                }));
+
+                                newTopics.push({
+                                    topic: topic,
+                                    numPartitions: getEnv("KAFKA_NUM_PARTITIONS") ? parseInt(getEnv("KAFKA_NUM_PARTITIONS")) : undefined,
+                                    replicationFactor: getEnv("KAFKA_REPLICATION_FACTOR") ? parseInt(getEnv("KAFKA_REPLICATION_FACTOR")) : undefined,
+                                });                            
+                            } else {
+                                const defaultPartitions = parseInt(getEnv("KAFKA_NUM_PARTITIONS", "1"));
+                                const metadata = await admin.fetchTopicMetadata({
+                                    topics: [topic]
+                                });
+
+                                const currentPartitions = metadata.topics[0].partitions.length;
+
+                                Logger.audit(Lang.__("Topic [{{topic}}(#{{partitions}})] already exists.", {
+                                    topic: topic,
+                                    partitions: currentPartitions.toString()
+                                }));
+
+                                if (defaultPartitions > metadata.topics[0].partitions.length) {
+                                    Logger.audit(Lang.__("Preparing partition creation [{{partitions}}] for topic [{{topic}}].", {
+                                        topic: topic,
+                                        partitions: defaultPartitions.toString(),
+                                    }));
+                                    topicPartitions.push({
+                                        topic: topic,
+                                        count: defaultPartitions
+                                    });
+                                }
+                            }
+
+                            if (newTopics.length > 0) {
+                                await admin.createTopics({
+                                    waitForLeaders: true,
+                                    topics: newTopics
+                                }).then(result => {
+                                    if (result) {
+                                        Logger.audit(Lang.__("Topics [{{topics}}] successfully created.", {
+                                            topics: newTopics.map(item => item.topic).join(", ")
+                                        }))
+                                    } else {
+                                        Logger.audit(Lang.__(`Topics [{{topics}}] were not created.`, {
+                                            topics: newTopics.map(item => item.topic).join(", ")
+                                        }))
+                                    }
+                                }, error => {
+                                    logCatchedException(error)
+                                })
+                                    .catch(logCatchedException)
+                                ;
+                            }
+
+                            if (topicPartitions.length > 0) {
+                                await admin.createPartitions({
+                                    topicPartitions: topicPartitions
+                                }).then(result => {
+                                    if (result) {
+                                        Logger.audit(Lang.__("Partitions for topics [{{topics}}] successfully created.", {
+                                            topics: topicPartitions.map(item => item.topic).join(", ")
+                                        }))
+                                    } else {
+                                        Logger.audit(Lang.__(`Partitions for topics [{{topics}}] were not created.`, {
+                                            topics: topicPartitions.map(item => item.topic).join(", ")
+                                        }))
+                                    }
+                                }, error => {
+                                    logCatchedException(error)
+                                })
+                                    .catch(logCatchedException)
+                                ;
+                            }
+                        }
+                    }
+
+                    if (this.boostrap.consumers.length > 0) {        
+                        Logger.audit(Lang.__("Consumers set up started."));
+
+                        for (const consumerClass of this.boostrap.consumers) {
+                            const instance = new consumerClass();
+                            instance.onCreated();
+
+                            Logger.audit(Lang.__("Preparing consumer [{{name}}({{group}})] on topic [{{topic}}].", {
                                 name: instance.constructor.name,
                                 group: instance.groupId,
                                 topic: instance.topic,
-                            }))
-                        });
+                            }));
 
-                        instance.onBooted();
+                            const consumer = await KafkaFacade.getConsumer(instance.groupId).catch(logCatchedError) as Consumer;
+
+                            await instance.boot(consumer).then(() => {
+                                consumer.run({
+                                    eachMessage: async payload => {
+                                        const message = payload.message;
+                                        const value = JSON.parse(payload.message.value?.toString() as string);
+
+                                        Logger.debug(Lang.__("Consuming message on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
+                                            name: instance.constructor.name,
+                                            group: instance.groupId,
+                                            topic: instance.topic,
+                                            partition: payload.partition.toString(),
+                                        }))
+
+                                        return instance.handler(value, payload)
+                                            .then(() => {
+
+                                                Logger.debug(Lang.__("Message successfully consumed on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
+                                                    name: instance.constructor.name,
+                                                    group: instance.groupId,
+                                                    topic: instance.topic,
+                                                    partition: payload.partition.toString(),
+                                                }))
+                                                Logger.trace(Lang.__("Message consumed: "));
+                                                Logger.trace({
+                                                    key: message.key?.toString(),
+                                                    offset: message.offset,
+                                                    message: message.value?.toString(),
+                                                    headers: message.headers,
+                                                    timestamp: moment(message.timestamp, "x").format(TIMESTAMP_FORMAT),
+                                                });
+                        
+                                                instance.onCompleted(message);
+                                            }, error => {
+                                                logCatchedError(error);
+                                                instance.onFailed(error, message);
+                                            })
+                                            .catch(error => {
+                                                instance.onError(error);
+                                                logCatchedError(error);
+                                            })
+                                        ;
+                                    }
+                                });
+
+                                Logger.audit(Lang.__("Consumer [{{name}}({{group}})] on topic [{{topic}}] is ready.", {
+                                    name: instance.constructor.name,
+                                    group: instance.groupId,
+                                    topic: instance.topic,
+                                }))
+                            });
+
+                            instance.onBooted();
+                        }
+
+                        Logger.audit(Lang.__("Consumers set up completed [{{count}}].", {
+                            count: this.boostrap.consumers.length.toString()
+                        }));
+                    } else {
+                        Logger.audit(Lang.__("No consumers found."));
                     }
 
-                    Logger.audit(Lang.__("Consumers set up completed [{{count}}].", {
-                        count: this.boostrap.consumers.length.toString()
-                    }));
-                } else {
-                    Logger.audit(Lang.__("No consumers found."));
-                }
-
-                resolve();
-            }, error => {
-                Logger.error(`Kafka producer cannot connect to kafka broker(s) [${brokers}].`);
-                logCatchedException(error);
-                reject(error);
-            })
-                .catch(logCatchedException)
+                    const producer = kafka.producer({
+                        allowAutoTopicCreation: false,
+                        transactionTimeout: 2000
+                    });
+        
+                    await producer.connect().then(async () => {
+                        KafkaFacade.producer = producer;
+        
+                        Logger.debug(Lang.__("Kafka producer successfully connected to kafka broker(s) on [{{brokers}}].", {
+                            brokers: brokers
+                        }));
+        
+                        resolve();
+                    }, error => {
+                        Logger.error(`Kafka producer cannot connect to kafka broker(s) [${brokers}].`);
+                        logCatchedException(error);
+                        reject(error);
+                    })
+                        .catch(logCatchedException)
+                    ;
+                })
             ;
+            resolve();
         });
     }
 }

@@ -1,5 +1,6 @@
 import {
     Lang,
+    logCatchedException,
     Logger,
     ServiceProvider
 } from "@ant/framework";
@@ -7,7 +8,16 @@ import { SchedulerFacade, TaskContract } from "@ant/framework/lib/src/scheduler"
 
 export default class TasksProvider extends ServiceProvider {
     async boot(): Promise<void> {
-        await this.setTask(this.boostrap.tasks);
+        await this.setTask(this.boostrap.tasks)
+            .then((count: number) => {
+                Logger.audit(Lang.__("Tasks set up completed [{{count}}].", {
+                    count: count.toString()
+                }));
+            }, (error) => {
+                Logger.audit(Lang.__(error.message));
+            })
+            .catch(logCatchedException)
+        ;
     }
 
     protected setTask(tasks: (new() => TaskContract)[]): Promise<number> {

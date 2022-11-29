@@ -1,4 +1,3 @@
-/* eslint-disable indent */
 import {
     createConnection,
 } from "typeorm";
