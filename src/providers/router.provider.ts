@@ -73,7 +73,7 @@ export default class RouterProvider extends ServiceProvider {
                         scheme: config.scheme || "http",
                         host: config.host || "localhost",
                         port: config.port,
-                        endpoint: instance.url,
+                        endpoint: Array.isArray(instance.url) ? instance.url.join(",") : instance.url,
                         method: instance.method.toUpperCase(),
                     };
 
