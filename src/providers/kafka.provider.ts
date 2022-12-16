@@ -81,6 +81,9 @@ export class KafkaFacade {
         const consumer =  KafkaFacade.kafka.consumer({
             groupId: groupId || snakeCase(getEnv("KAFKA_DEFAULT_CONSUMER_GROUP_ID")),
             allowAutoTopicCreation: false,
+            sessionTimeout: 9000,
+            metadataMaxAge: 9000,
+            heartbeatInterval: 3000,
         });
 
         await consumer.connect()
@@ -150,7 +153,9 @@ export default class KafkaProvider extends ServiceProvider {
                     retries: parseInt(getEnv("KAFKA_RETRY_TIMES", "3"))
                 },
                 logLevel: logLevel.ERROR,
-                logCreator: kafkaLogger
+                logCreator: kafkaLogger,
+                requestTimeout: 9000,
+                connectionTimeout: 9000,
             });
 
             const admin = kafka.admin();
@@ -207,13 +212,13 @@ export default class KafkaProvider extends ServiceProvider {
                                         topic: topic,
                                         partitions: defaultPartitions.toString(),
                                     }));
+
                                     topicPartitions.push({
                                         topic: topic,
                                         count: defaultPartitions
                                     });
                                 }
                             }
-
                             if (newTopics.length > 0) {
                                 await admin.createTopics({
                                     waitForLeaders: true,
@@ -274,7 +279,21 @@ export default class KafkaProvider extends ServiceProvider {
 
                             await instance.boot(consumer).then(() => {
                                 consumer.run({
+                                    autoCommit: true,
+                                    autoCommitInterval: 3000,
+                                    autoCommitThreshold: 100,
                                     eachMessage: async payload => {
+                                        const heartbeat = () => {
+                                            clearTimeout(heartbeatTimeout);
+
+                                            return setTimeout(async () => {
+                                                await payload.heartbeat();
+                                                heartbeat();
+                                            }, 3000);
+                                        }
+
+                                        const heartbeatTimeout = heartbeat();
+
                                         const message = payload.message;
                                         const value = JSON.parse(payload.message.value?.toString() as string);
 
@@ -287,7 +306,6 @@ export default class KafkaProvider extends ServiceProvider {
 
                                         return instance.handler(value, payload)
                                             .then(() => {
-
                                                 Logger.debug(Lang.__("Message successfully consumed on [{{name}}({{group}})] from topic [{{topic}}(#{{partition}})]", {
                                                     name: instance.constructor.name,
                                                     group: instance.groupId,
@@ -311,6 +329,8 @@ export default class KafkaProvider extends ServiceProvider {
                                             .catch(error => {
                                                 instance.onError(error);
                                                 logCatchedError(error);
+                                            }).finally(() => {
+                                                clearTimeout(heartbeatTimeout);
                                             })
                                         ;
                                     }
@@ -335,7 +355,8 @@ export default class KafkaProvider extends ServiceProvider {
 
                     const producer = kafka.producer({
                         allowAutoTopicCreation: false,
-                        transactionTimeout: 2000
+                        transactionTimeout: 2000,
+                        metadataMaxAge: 9000,
                     });
         
                     await producer.connect().then(async () => {
