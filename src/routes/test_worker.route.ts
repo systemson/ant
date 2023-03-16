@@ -9,7 +9,7 @@ import { QueueEngineFacade } from "@ant/framework";
 import { Lang } from "@ant/framework";
 
 export class TestWorkerRoute extends BaseRoute {
-    url = "/test/:status";
+    url = "/worker/test/:status";
 
     method: Method = "get";
 

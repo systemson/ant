@@ -22,6 +22,10 @@ import KafkaProvider from "./providers/kafka.provider";
 import { KafkaTask } from "./tasks/kafka.task";
 import { KafkaRoute } from "./routes/kafka.route";
 import { TestConsumer } from "./consumers/test.consumer";
+import { EventProvider } from "./providers/event.provider";
+import { ListenerContract } from "@ant/framework/lib/src/events";
+import { TestListener } from "./listeners/test.listener";
+import { TestEventRoute } from "./routes/test_event.route";
 
 export class Boostrap implements BoostrapInterface {
     /**
@@ -34,6 +38,7 @@ export class Boostrap implements BoostrapInterface {
         DatabaseProvider,
         RouterProvider,
         TasksProvider,
+        EventProvider,
     ];
 
     /**
@@ -46,6 +51,7 @@ export class Boostrap implements BoostrapInterface {
         TestWorkerRoute,
         JobsMonitorRoute,
         KafkaRoute,
+        TestEventRoute,
     ];
 
     /**
@@ -68,5 +74,12 @@ export class Boostrap implements BoostrapInterface {
     public tasks: (new () => TaskContract)[] = [
         TestTask,
         KafkaTask,
+    ];
+
+    /**
+     * The declared application's event listeners. 
+     */
+    listeners: (new () => ListenerContract)[] = [
+        TestListener,
     ];
 }

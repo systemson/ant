@@ -9,6 +9,7 @@ import {
     Lang,
     logCatchedException,
     Logger,
+    logTypeORMCatchedError,
     OrmFacade,
     ServiceProvider,
     SnakeCaseNamingStrategy,
@@ -29,7 +30,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 ssl: getEnv('DB_SSL', 'false') == 'true',
                 extra: {
                     ssl: getEnv('DB_SSL', 'false') == 'true' ? {
-                      rejectUnauthorized: false,
+                        rejectUnauthorized: false,
                     } : undefined,
                 },
             })).then((connection) => {
@@ -42,7 +43,10 @@ export default class DatabaseProvider extends ServiceProvider {
                 }));
 
                 resolve();
-            }, reject)
+            }, error => {
+                logTypeORMCatchedError(error);
+                reject(error);
+            })
                 .catch((error) => {
                     Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}/{{database}}].", {
                         host: getEnv("DB_HOST", "localhost"),
