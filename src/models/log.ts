@@ -1,15 +1,15 @@
 import {
-    Model,
     DatabaseLoggerProvider
 } from "@ant/framework";
 import {
+    BaseEntity,
     Column,
     Entity,
     PrimaryGeneratedColumn
 } from "typeorm";
 
 @Entity()
-export class Log extends Model implements DatabaseLoggerProvider {
+export class Log extends BaseEntity implements DatabaseLoggerProvider {
     @PrimaryGeneratedColumn()
     Id!: string;
 

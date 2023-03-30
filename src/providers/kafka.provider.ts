@@ -84,6 +84,13 @@ export class KafkaFacade {
             sessionTimeout: 9000,
             metadataMaxAge: 9000,
             heartbeatInterval: 3000,
+            retry: {
+                maxRetryTime: 24 * 60 * 60 * 1000,
+                factor: 0,
+                multiplier: 1,
+                retries: 100000,
+                initialRetryTime: 1000,
+            },
         });
 
         await consumer.connect()
@@ -149,13 +156,17 @@ export default class KafkaProvider extends ServiceProvider {
             const kafka = new Kafka({
                 clientId: snakeCase(getEnv("KAFKA_CLIENT_ID")),
                 brokers: brokers.split(','),
-                retry: {
-                    retries: parseInt(getEnv("KAFKA_RETRY_TIMES", "3"))
-                },
                 logLevel: logLevel.ERROR,
                 logCreator: kafkaLogger,
                 requestTimeout: 9000,
                 connectionTimeout: 9000,
+                retry: {
+                    maxRetryTime: 24 * 60 * 60 * 1000,
+                    factor: 0,
+                    multiplier: 1,
+                    retries: 100000,
+                    initialRetryTime: 1000,
+                },
             });
 
             const admin = kafka.admin();
@@ -357,6 +368,13 @@ export default class KafkaProvider extends ServiceProvider {
                         allowAutoTopicCreation: false,
                         transactionTimeout: 2000,
                         metadataMaxAge: 9000,
+                        retry: {
+                            maxRetryTime: 24 * 60 * 60 * 1000,
+                            factor: 0,
+                            multiplier: 1,
+                            retries: 100000,
+                            initialRetryTime: 1000,
+                        },
                     });
         
                     await producer.connect().then(async () => {

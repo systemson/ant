@@ -12,7 +12,7 @@ export class LogsListRoute extends BaseRoute {
 
     method: Method = "get";
 
-    async handle(req: Request): Promise<Response> {
-        return response(await Log.paginate(req));
+    async handle(): Promise<Response> {
+        return response(await Log.find());
     }
 }
