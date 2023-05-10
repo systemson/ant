@@ -1,7 +1,6 @@
 import {
     BaseRoute,
     Method,
-    Request,
     response,
     Response
 } from "@ant/framework";

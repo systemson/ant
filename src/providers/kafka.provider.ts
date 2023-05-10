@@ -13,7 +13,6 @@ export class KafkaFacade {
 
             if (!KafkaFacade.producer) {
                 throw new Error(Lang.__("Kafka producer not found."));
-                
             }
 
             KafkaFacade.producer.send({
@@ -67,7 +66,7 @@ export class KafkaFacade {
             ])
         }
     }
-    
+
     protected static prepareStream(topic: string, data: unknown, retries = 0): MessageStream {
         return {
             body: data,
@@ -78,7 +77,7 @@ export class KafkaFacade {
     }
 
     public static async getConsumer(groupId: string): Promise<Consumer> {
-        const consumer =  KafkaFacade.kafka.consumer({
+        const consumer = KafkaFacade.kafka.consumer({
             groupId: groupId || snakeCase(getEnv("KAFKA_DEFAULT_CONSUMER_GROUP_ID")),
             allowAutoTopicCreation: false,
             sessionTimeout: 9000,
@@ -94,17 +93,15 @@ export class KafkaFacade {
         });
 
         await consumer.connect()
-            .catch(logCatchedError)
-        ;
+            .catch(logCatchedError);
 
         return consumer;
     }
 
     public static async getAdmin(): Promise<Admin> {
-        const admin =  KafkaFacade.kafka.admin();
+        const admin = KafkaFacade.kafka.admin();
         await admin.connect()
-            .catch(logCatchedError)
-        ;
+            .catch(logCatchedError);
 
         return admin;
     }
@@ -153,7 +150,7 @@ export default class KafkaProvider extends ServiceProvider {
         return new Promise(async (resolve, reject) => {
             const brokers = getEnv("KAFKA_BROKERS", "localhost:9092");
 
-            const kafka = new Kafka({
+            const adminConfig = {
                 clientId: snakeCase(getEnv("KAFKA_CLIENT_ID")),
                 brokers: brokers.split(','),
                 logLevel: logLevel.ERROR,
@@ -167,13 +164,19 @@ export default class KafkaProvider extends ServiceProvider {
                     retries: 100000,
                     initialRetryTime: 1000,
                 },
-            });
+            };
+
+            const kafka = new Kafka(adminConfig);
 
             const admin = kafka.admin();
             KafkaFacade.kafka = kafka;
 
             await admin.connect()
                 .then(async () => {
+                    Logger.info(Lang.__("Connected to Kafka server on [{{brokers}}].", {
+                        brokers: brokers,
+                    }));
+
                     const currentTopics = await admin.listTopics();
                     const topicsArray = getEnv("KAFKA_TOPICS", "default_topic").split(",");
                     Logger.audit(Lang.__("Current topics: " + currentTopics.join(", ")));
@@ -204,7 +207,7 @@ export default class KafkaProvider extends ServiceProvider {
                                     topic: topic,
                                     numPartitions: getEnv("KAFKA_NUM_PARTITIONS") ? parseInt(getEnv("KAFKA_NUM_PARTITIONS")) : undefined,
                                     replicationFactor: getEnv("KAFKA_REPLICATION_FACTOR") ? parseInt(getEnv("KAFKA_REPLICATION_FACTOR")) : undefined,
-                                });                            
+                                });
                             } else {
                                 const defaultPartitions = parseInt(getEnv("KAFKA_NUM_PARTITIONS", "1"));
                                 const metadata = await admin.fetchTopicMetadata({
@@ -230,6 +233,7 @@ export default class KafkaProvider extends ServiceProvider {
                                     });
                                 }
                             }
+
                             if (newTopics.length > 0) {
                                 await admin.createTopics({
                                     waitForLeaders: true,
@@ -246,9 +250,7 @@ export default class KafkaProvider extends ServiceProvider {
                                     }
                                 }, error => {
                                     logCatchedException(error)
-                                })
-                                    .catch(logCatchedException)
-                                ;
+                                }).catch(logCatchedException);
                             }
 
                             if (topicPartitions.length > 0) {
@@ -266,14 +268,12 @@ export default class KafkaProvider extends ServiceProvider {
                                     }
                                 }, error => {
                                     logCatchedException(error)
-                                })
-                                    .catch(logCatchedException)
-                                ;
+                                }).catch(logCatchedException);
                             }
                         }
                     }
 
-                    if (this.boostrap.consumers.length > 0) {        
+                    if (this.boostrap.consumers.length > 0) {
                         Logger.audit(Lang.__("Consumers set up started."));
 
                         for (const consumerClass of this.boostrap.consumers) {
@@ -322,7 +322,8 @@ export default class KafkaProvider extends ServiceProvider {
                                                     group: instance.groupId,
                                                     topic: instance.topic,
                                                     partition: payload.partition.toString(),
-                                                }))
+                                                }));
+
                                                 Logger.trace(Lang.__("Message consumed: "));
                                                 Logger.trace({
                                                     key: message.key?.toString(),
@@ -331,7 +332,7 @@ export default class KafkaProvider extends ServiceProvider {
                                                     headers: message.headers,
                                                     timestamp: moment(message.timestamp, "x").format(TIMESTAMP_FORMAT),
                                                 });
-                        
+
                                                 instance.onCompleted(message);
                                             }, error => {
                                                 logCatchedError(error);
@@ -342,8 +343,7 @@ export default class KafkaProvider extends ServiceProvider {
                                                 logCatchedError(error);
                                             }).finally(() => {
                                                 clearTimeout(heartbeatTimeout);
-                                            })
-                                        ;
+                                            });
                                     }
                                 });
 
@@ -376,23 +376,21 @@ export default class KafkaProvider extends ServiceProvider {
                             initialRetryTime: 1000,
                         },
                     });
-        
+
                     await producer.connect().then(async () => {
                         KafkaFacade.producer = producer;
-        
+
                         Logger.debug(Lang.__("Kafka producer successfully connected to kafka broker(s) on [{{brokers}}].", {
                             brokers: brokers
                         }));
-        
+
                         resolve();
                     }, error => {
                         Logger.error(`Kafka producer cannot connect to kafka broker(s) [${brokers}].`);
                         logCatchedException(error);
                         reject(error);
-                    })
-                        .catch(logCatchedException)
-                    ;
-                })
+                    }).catch(logCatchedException);
+                }).catch(logCatchedException)
             ;
             resolve();
         });
