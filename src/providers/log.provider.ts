@@ -7,7 +7,7 @@ import {
     FileLogger
 } from "@ant/framework";
 import { snakeCase } from "typeorm/util/StringUtils";
-import { Log } from "../models/log";
+import { Log } from "../database/models/log";
 
 export default class LogProvider extends ServiceProvider {
     boot(): Promise<void> {
