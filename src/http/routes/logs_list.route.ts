@@ -4,7 +4,7 @@ import {
     response,
     Response
 } from "@ant/framework";
-import { Log } from "../models/log";
+import { Log } from "../../database/models/log";
 
 export class LogsListRoute extends BaseRoute {
     url = "/api/logs";

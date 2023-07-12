@@ -8,7 +8,7 @@ import {
     getEnv,
     Lang
 } from "@ant/framework";
-import { KafkaFacade } from "../providers/kafka.provider";
+import { KafkaFacade } from "../../providers/kafka.provider";
 
 export class KafkaRoute extends BaseRoute {
     url = "/api/kafka/test";

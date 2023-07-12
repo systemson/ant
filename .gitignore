@@ -1,5 +1,6 @@
 node_modules
 build/
+bin/
 npm-debug.log
 .env
 .env.production

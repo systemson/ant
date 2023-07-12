@@ -1,0 +1,9 @@
+{
+    "pkg": {
+        "assets": "./build/public/**/**",
+        "targets": [
+            "host"
+        ],
+        "compress": "GZip"
+    }
+}

@@ -1,13 +1,13 @@
 import DatabaseProvider from "./providers/database.provider";
-import { HomeRoute } from "./routes/home.route";
-import { InfoRoute } from "./routes/info.route";
+import { HomeRoute } from "./http/routes/home.route";
+import { InfoRoute } from "./http/routes/info.route";
 import LogProvider from "./providers/log.provider";
 import CacheProvider from "./providers/cache.provider";
-import { LogsListRoute } from "./routes/logs_list.route";
+import { LogsListRoute } from "./http/routes/logs_list.route";
 import RouterProvider from "./providers/router.provider";
-import { TestWorkerRoute } from "./routes/test_worker.route";
+import { TestWorkerRoute } from "./http/routes/test_worker.route";
 import { TestWorker } from "./workers/test.worker";
-import { JobsMonitorRoute } from "./routes/jobs_monitor.route";
+import { JobsMonitorRoute } from "./http/routes/jobs_monitor.route";
 import {
     BoostrapInterface,
     RouteContract,
@@ -20,12 +20,12 @@ import TasksProvider from "./providers/tasks.provider";
 import { TestTask } from "./tasks/test.task";
 import KafkaProvider from "./providers/kafka.provider";
 import { KafkaTask } from "./tasks/kafka.task";
-import { KafkaRoute } from "./routes/kafka.route";
+import { KafkaRoute } from "./http/routes/kafka.route";
 import { TestConsumer } from "./consumers/test.consumer";
 import { EventProvider } from "./providers/event.provider";
 import { ListenerContract } from "@ant/framework/lib/src/events";
 import { TestListener } from "./listeners/test.listener";
-import { TestEventRoute } from "./routes/test_event.route";
+import { TestEventRoute } from "./http/routes/test_event.route";
 
 export class Boostrap implements BoostrapInterface {
     /**

@@ -1,6 +1,4 @@
 import express from "express";
-import compression from "compression";
-import cors from "cors";
 import {
     ServiceProvider,
     RouterFacade,
@@ -9,23 +7,26 @@ import {
     Lang,
     logCatchedError,
     RouteContract,
-    logCatchedException
+    logCatchedException,
+    MiddlewareContract
 } from "@ant/framework";
 import {
     Response as ExpressResponse,
     Request as ExpressRequest,
+    RequestHandler
 } from "express";
+import { GlobalMiddlewares } from "../http/middlewares/global.middleware";
 
 export default class RouterProvider extends ServiceProvider {
     protected router = express();
+    protected middlewares: (new () => MiddlewareContract)[] = [
+        ...GlobalMiddlewares,
+    ];
 
     boot(): Promise<void> {
         return new Promise((resolve) => {
             this.router
-                .use(express.json())
-                .use(cors())
-                .use(compression())
-                .use(express.text({ type: "application/xml" }))
+                .use(this.instanceMiddlewares(this.middlewares))
             ;
 
             const config = routerConfig();
@@ -54,7 +55,6 @@ export default class RouterProvider extends ServiceProvider {
     }
 
     /**
-     * @todo COULD be moved to a provider.
      * 
      * @param routeClasses 
      * @returns 
@@ -79,7 +79,7 @@ export default class RouterProvider extends ServiceProvider {
 
                     Logger.audit(Lang.__("Preparing route [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
 
-                    this.router[instance.method](instance.url, (req: ExpressRequest, res: ExpressResponse) => {
+                    this.router[instance.method](instance.url, this.instanceMiddlewares(instance.middlewares), (req: ExpressRequest, res: ExpressResponse) => {
                         Logger.debug(Lang.__("Request received in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                         Logger.trace(Lang.__("Client request: "));
                         Logger.trace({
@@ -130,5 +130,21 @@ export default class RouterProvider extends ServiceProvider {
                 });
             }
         });
+    }
+
+    protected instanceMiddlewares(middlewares: (new () => MiddlewareContract)[]): RequestHandler[] {
+        return middlewares.map(middleware => (new middleware).handle);
+    }
+
+    public static getToken(req: ExpressRequest, type: "bearer" | "basic" = "bearer"): string | undefined {
+        const authorizationHeader = req.headers['authorization'];
+        if (!authorizationHeader) {
+            return undefined;
+        }
+        const parts = authorizationHeader.split(' ');
+        if (parts.length !== 2 || parts[0].toLowerCase() !== type) {
+            return undefined;
+        }
+        return parts[1];
     }
 }
