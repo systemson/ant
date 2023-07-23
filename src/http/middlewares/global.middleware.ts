@@ -1,7 +1,8 @@
-import { BaseMiddleware } from "@ant/framework";
+import { BaseMiddleware, MiddlewareContract } from "@ant/framework";
 import express from "express";
 import cors from "cors";
 import compression from "compression";
+import helmet from "helmet";
 
 const jsonM = class extends BaseMiddleware {
     handle = express.json()
@@ -18,11 +19,15 @@ const compressM = class extends BaseMiddleware {
 const formM = class extends BaseMiddleware {
     handle = express.urlencoded({ extended: false });
 }
+const helmetM = class extends BaseMiddleware {
+    handle = helmet();
+}
 
-export const GlobalMiddlewares = [
+export const GlobalMiddlewares: (new () => MiddlewareContract)[] = [
     jsonM,
     xmlM,
     formM,
     corsM,
+    helmetM,
     compressM,
 ];

@@ -8,7 +8,10 @@ import {
     logCatchedError,
     RouteContract,
     logCatchedException,
-    MiddlewareContract
+    MiddlewareContract,
+    ErrorResponse,
+    RouterConfig,
+    getEnv
 } from "@ant/framework";
 import {
     Response as ExpressResponse,
@@ -16,6 +19,9 @@ import {
     RequestHandler
 } from "express";
 import { GlobalMiddlewares } from "../http/middlewares/global.middleware";
+import path from "path";
+import fs from "fs";
+import https from "https";
 
 export default class RouterProvider extends ServiceProvider {
     protected router = express();
@@ -54,11 +60,6 @@ export default class RouterProvider extends ServiceProvider {
         });
     }
 
-    /**
-     * 
-     * @param routeClasses 
-     * @returns 
-     */
     public setRoutes(routeClasses:  (new() => RouteContract)[]): Promise<number> {
         return new Promise((resolve, reject) => {
             if (routeClasses.length > 0) {
@@ -101,15 +102,25 @@ export default class RouterProvider extends ServiceProvider {
                                 Logger.trace(handler.getData());
 
                                 instance.onCompleted(req);
-                            }, (error) => {
-                                res.status(500).send(error);
+                            },
+                            (error) => {
+                                if (error instanceof ErrorResponse) {
+                                    error.send(res);
+                                } else {
+                                    res.status(500).send(error);
+                                }
 
                                 Logger.error(Lang.__("Error handling a request in [{{name}} => ({{method}}) {{scheme}}://{{host}}:{{port}}{{{endpoint}}}].", routeData));
                                 logCatchedError(error);
 
                                 instance.onFailed(req, error);
-                            }).catch((error) => {
-                                res.status(500).send(error);
+                            }
+                            ).catch((error) => {
+                                if (error instanceof ErrorResponse) {
+                                    error.send(res);
+                                } else {
+                                    res.status(500).send(error);
+                                }
 
                                 instance.onError(error);
 
@@ -134,6 +145,27 @@ export default class RouterProvider extends ServiceProvider {
 
     protected instanceMiddlewares(middlewares: (new () => MiddlewareContract)[]): RequestHandler[] {
         return middlewares.map(middleware => (new middleware).handle);
+    }
+
+    public createHttpServer(config: RouterConfig) {
+        if (config.scheme?.toLowerCase() == "https") {
+            if (
+                !fs.existsSync(path.join(__dirname, getEnv("SSL_KEY_DIR"))) ||
+                !fs.existsSync(path.join(__dirname, getEnv("SSL_CERT_DIR")))
+            ) {
+                throw new Error(Lang.__("Invalid ssl cert/key path."));
+            }
+
+            const options = {
+                passphrase: getEnv("SSL_PASSPHRASE"),
+                key: fs.readFileSync(path.join(__dirname, getEnv("SSL_KEY_DIR")), 'utf8'),
+                cert: fs.readFileSync(path.join(__dirname, getEnv("SSL_CERT_DIR")), 'utf8'),
+            };
+
+            return https.createServer(options, this.router)
+        }
+
+        return this.router;
     }
 
     public static getToken(req: ExpressRequest, type: "bearer" | "basic" = "bearer"): string | undefined {
