@@ -16,6 +16,7 @@ import {
 import {
     Response as ExpressResponse,
     Request as ExpressRequest,
+    NextFunction,
     RequestHandler
 } from "express";
 import { GlobalMiddlewares } from "../http/middlewares/global.middleware";
@@ -45,7 +46,7 @@ export default class RouterProvider extends ServiceProvider {
                         count: count.toString()
                     }));
 
-                    const server = this.router.listen(config.port, () => {
+                    const server = this.createHttpServer(config).listen(config.port, () => {
                         Logger.info(Lang.__("Http server is running at [{{scheme}}://{{host}}:{{port}}]", config));
                         
                         resolve();
@@ -144,7 +145,7 @@ export default class RouterProvider extends ServiceProvider {
     }
 
     protected instanceMiddlewares(middlewares: (new () => MiddlewareContract)[]): RequestHandler[] {
-        return middlewares.map(middleware => (new middleware).handle);
+        return middlewares.map(middleware => (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => (new middleware).handle(req, res, next));
     }
 
     public createHttpServer(config: RouterConfig) {
