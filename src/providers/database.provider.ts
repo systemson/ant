@@ -32,7 +32,7 @@ export default class DatabaseProvider extends ServiceProvider {
                 .then(async (connection) => {
                     OrmFacade.orm = connection;
 
-                    Logger.info(Lang.__("Connected to {{driver}} server on [{{host}}:{{port}}/{{database}}].", {
+                    Logger.info(Lang.__("Connected to [{{driver}}] server on [{{host}}:{{port}}/{{database}}].", {
                         host: getEnv("DB_HOST", "localhost"),
                         port: getEnv("DB_PORT", "5432"),
                         driver: getEnv("DB_TYPE", "postgres"),
@@ -40,22 +40,21 @@ export default class DatabaseProvider extends ServiceProvider {
                     }));
 
                     if (envIsTrue(["DB_SEED", "DB_RESTART"])) {
-                        await (new DatabaseSeeder).run()
+                        await (new DatabaseSeeder).run();
                     }
 
                     resolve();
                 }, error => {
-                    logTypeORMCatchedError(error);
-                    reject(error);
-                })
-                .catch((error) => {
-                    Logger.error(Lang.__("Could not connect to {{driver}} server on [{{host}}:{{port}}/{{database}}].", {
+                    Logger.error(Lang.__("Error connecting to [{{driver}}] server on [{{host}}:{{port}}/{{database}}].", {
                         host: getEnv("DB_HOST", "localhost"),
                         port: getEnv("DB_PORT", "5432"),
                         driver: getEnv("DB_TYPE", "postgres"),
                         database: getEnv("DB_DATABASE", "ant"),
                     }));
 
+                    reject(error);
+                })
+                .catch((error) => {
                     logCatchedException(error);
                 });
         });

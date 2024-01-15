@@ -33,12 +33,12 @@ export class Boostrap implements BoostrapInterface {
      */
     public providers: (new(boostrap: BoostrapInterface) => ServiceProviderContract)[] = [
         LogProvider,
-        KafkaProvider,
-        CacheProvider,
-        DatabaseProvider,
+        // KafkaProvider,
+        // CacheProvider,
+        // DatabaseProvider,
         RouterProvider,
-        TasksProvider,
-        EventProvider,
+        // TasksProvider,
+        // EventProvider,
     ];
 
     /**
