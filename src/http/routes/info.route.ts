@@ -13,19 +13,10 @@ import {
 export class InfoRoute extends BaseRoute {
     url = "/info";
 
-    method: Method = "post";
+    method: Method = "get";
 
     handle(req: Request): Response {
         const body = req.body;
-
-        console.log(body);
-        console.log(JSON.stringify(body));
-        console.log(body.tatara_abuelo);
-        console.log(body.tatara_abuelo.bisabuelo);
-        console.log(body.tatara_abuelo.bisabuelo.abuelo);
-        console.log(body.tatara_abuelo.bisabuelo.abuelo.padre);
-        console.log(body.tatara_abuelo.bisabuelo.abuelo.padre.hijo);
-        console.log(body.tatara_abuelo.bisabuelo.abuelo.padre.hijo.nieto);
 
         return response({
             status: Lang.__("active"),
